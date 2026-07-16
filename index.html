@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Previsão - TCC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <aside>
+        <div class="brand">
+            <h2>Observatório de Tráfego Preditivo</h2>
+        </div>
+        <nav>
+            <a href="#" class="nav-link active" data-target="sobre">
+                <i data-lucide="file-text"></i> Fundamentação Teórica
+            </a>
+            <a href="#" class="nav-link" data-target="dashboard">
+                <i data-lucide="line-chart"></i> Protótipo de Visualização
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <p><strong>Desenvolvido por:</strong> Samuel Salvador</p>
+            <p><strong>Curso:</strong> Ciência da Computação</p>
+            <p><strong>Instituição:</strong> Universidade Estadual do Paraná (UNESPAR)</p>
+            <p><strong>Ano:</strong> 2026</p>
+        </div>
+    </aside>
+
+    <main>
+        <div class="content-body">
+            
+            <section id="sobre" class="page-section active doc-section">
+                <h1>Previsão de Acidentes</h1>
+                <p>
+                    Esta é uma página demonstrativa do Trabalho de Conclusão de Curso (TCC) que propõe a integração de modelos estatísticos de 
+                    previsão de séries temporais com dados abertos de segurança pública. O objetivo central é fornecer uma base preditiva para o gerenciamento de tráfego, 
+                    alinhando-se aos conceitos de <strong>Cidades Inteligentes</strong>, onde a tomada de decisão para alocação de recursos 
+                    (como viaturas de resgate e policiamento ostensivo) deixa de ser reativa e passa a ser proativa.
+                </p>
+
+                <h2>1. A Base de Dados da PRF</h2>
+                <p>
+                    O modelo é alimentado pela base de dados abertos da 
+                    <strong>Polícia Rodoviária Federal (PRF)</strong>.
+                     Este conjunto de dados históricos cataloga todas as ocorrências de trânsito em rodovias federais, 
+                     fornecendo uma riqueza de variáveis que vão muito além da simples contagem de acidentes.
+                </p>
+                
+                <a href="https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf" target="_blank" rel="noopener noreferrer" class="reference-link">
+                    <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
+                    Acessar Portal de Dados Abertos da PRF
+                </a>
+                <p>Para a modelagem, os dados passam por um processo de ETL (Extração, Transformação e Carga) para serem agrupados temporalmente (ex: frequência diária ou semanal de acidentes) e espacialmente (filtrados por trechos rodoviários específicos). As principais variáveis extraídas incluem:</p>
+                <ul>
+                    <li><strong>Variáveis Endógenas:</strong> A própria contagem histórica de acidentes ao longo do tempo.</li>
+                    <li><strong>Variáveis Espaciais:</strong> Identificação da rodovia (ex: BR-369, BR-277), quilometragem e tipo de pista.</li>
+                    <li><strong>Variáveis Exógenas:</strong> Condições meteorológicas no momento do acidente (chuva, céu claro, neblina), 
+                        fase do dia (dia/noite) e calendário (dias úteis, finais de semana, feriados).</li>
+                </ul>
+
+                <h2>2. O Modelo Matemático: SARIMAX</h2>
+                <p>
+                    Para realizar as previsões, optou-se pelo algoritmo <strong>SARIMAX</strong> 
+                    (<em>Seasonal AutoRegressive Integrated Moving Average with eXogenous variables</em>).
+                     Este é um dos métodos mais robustos para modelagem de séries temporais não-estacionárias que apresentam sazonalidade e dependem de fatores externos.
+                </p>
+                
+                <div class="math-block">
+                    SARIMAX (p, d, q) × (P, D, Q)<sub>s</sub>
+                </div>
+
+                <p>O modelo é decomposto nas seguintes estruturas operacionais:</p>
+                
+                <h3>Componentes Não-Sazonais (ARIMA)</h3>
+                <ul>
+                    <li><strong>AR (p) - Autorregressivo:</strong> 
+                        Indica que a previsão de acidentes de amanhã depende de uma combinação linear dos acidentes ocorridos nos dias anteriores. 
+                        O parâmetro <em>p</em> define a janela de atraso (lags).</li>
+                    <li><strong>
+                        I (d) - Integrado:</strong> 
+                        Representa o número de diferenciações necessárias para tornar a série temporal estacionária 
+                        (estabilizar a média e a variância ao longo do tempo, removendo tendências de crescimento ou queda a longo prazo).</li>
+                    <li><strong>MA (q) - Média Móvel:</strong> 
+                        Modela o erro da previsão como uma combinação linear dos erros de previsões passadas. 
+                        O parâmetro <em>q</em> define a janela desses erros.</li>
+                </ul>
+
+                <h3>Componentes Sazonais (S)</h3>
+                <p>
+                    O tráfego rodoviário possui flutuações cíclicas evidentes. Os parâmetros <strong>(P, D, Q)<sub>s</sub></strong> replicam a lógica do ARIMA, mas aplicados aos períodos sazonais. O fator <em>s</em> representa o tamanho do ciclo. Em dados diários de trânsito, <em>s=7</em> captura perfeitamente o padrão semanal, onde sábados e domingos apresentam naturezas de acidentes diferentes de terças e quartas-feiras.
+                </p>
+
+                <h3>Variáveis Exógenas (X)</h3>
+                <p>
+                    A principal justificativa para o uso do SARIMAX ao invés do clássico SARIMA é a inclusão da matriz de variáveis exógenas (X). No contexto deste TCC, a série temporal de acidentes não é tratada como um sistema isolado. A matriz introduz as características da base da PRF, permitindo que o modelo ajuste as previsões dinamicamente caso o trecho analisado esteja sob <strong>chuva intensa</strong> ou em véspera de <strong>feriado prolongado</strong>.
+                </p>
+
+            </section>
+
+            <section id="dashboard" class="page-section">
+                <div class="doc-section">
+                    <h1>Visualização de Dados (Protótipo)</h1>
+                    <p>Interface de simulação das requisições ao backend Python. Altere as variáveis exógenas e espaciais abaixo para visualizar como o modelo SARIMAX ajustará a previsão de incidência de acidentes para os próximos 7 dias.</p>
+                </div>
+
+                <div class="dashboard-layout">
+                    <div class="controls-panel">
+                        <div class="form-group">
+                            <label>Rodovia (Filtro Espacial)</label>
+                            <select id="rodovia">
+                                <option value="br369">BR-369 (Londrina - PR)</option>
+                                <option value="br376">BR-376 (Contorno Sul)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Condição Climática (Exógena 1)</label>
+                            <select id="clima">
+                                <option value="sol">Céu Claro</option>
+                                <option value="chuva">Chuva / Pista Molhada</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Calendário (Exógena 2)</label>
+                            <select id="feriado">
+                                <option value="0">Semana Convencional</option>
+                                <option value="1">Feriado Prolongado</option>
+                            </select>
+                        </div>
+                        <button class="btn-predict" id="btnPrever">Processar SARIMAX</button>
+                    </div>
+
+                    <div class="chart-box">
+                        <canvas id="sarimaxChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

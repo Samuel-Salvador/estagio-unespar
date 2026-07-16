@@ -1,0 +1,244 @@
+
+        :root {
+            --bg-app: #f4f5f7;
+            --bg-sidebar: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-active: #ffffff;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --text-main: #334155;
+            --text-heading: #0f172a;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Simplificada e Sóbria */
+        aside {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            margin-bottom: 2.5rem;
+            color: white;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 1rem;
+        }
+
+        .brand h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            /* Removemos o flex: 1 daqui para que o footer possa ser empurrado para baixo */
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--sidebar-active);
+            font-weight: 500;
+        }
+
+        /* Rodapé Institucional na Sidebar */
+        .sidebar-footer {
+            margin-top: auto; /* Empurra o footer para o final da sidebar */
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--sidebar-text);
+            line-height: 1.6;
+        }
+
+        .sidebar-footer p {
+            margin-bottom: 0.4rem;
+        }
+        
+        .sidebar-footer strong {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background-color: var(--card-bg);
+        }
+
+        .content-body {
+            padding: 3rem 4rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Estilização focada em Documentação/Texto Acadêmico */
+        .doc-section {
+            margin-bottom: 3rem;
+        }
+
+        .doc-section h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 2.2rem;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .doc-section h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-heading);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--bg-app);
+            padding-bottom: 0.5rem;
+        }
+
+        .doc-section h3 {
+            font-size: 1.2rem;
+            color: var(--text-heading);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .doc-section p {
+            font-family: 'Merriweather', serif;
+            line-height: 1.8;
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            color: #3f3f46;
+        }
+
+        .doc-section ul {
+            font-family: 'Merriweather', serif;
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+            line-height: 1.8;
+            color: #3f3f46;
+        }
+
+        .doc-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .math-block {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            font-size: 1.1rem;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        /* Estilos do Dashboard */
+        .dashboard-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .controls-panel {
+            background: var(--bg-app);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500;}
+        .form-group select { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 4px; }
+        
+        .btn-predict {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        .chart-box {
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 8px;
+            height: 500px;
+        }
+
+        .reference-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 2rem;
+            padding: 0.75rem 1.25rem;
+            background-color: #f1f5f9;
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .reference-link:hover {
+            background-color: #e2e8f0;
+            color: #1d4ed8;
+        }
