@@ -266,6 +266,70 @@ for idx, (_, r) in enumerate(df_res.iterrows()):
 
 print(f"       -> {len(trechos_list)} trechos processados com sucesso.")
 
+# -------------------------------------------------------------------------
+# [4.1/5] Tratamento Cartográfico: Deduplicação de Trechos Coincidentes e BR-0
+# -------------------------------------------------------------------------
+def haversine_km(lat1, lon1, lat2, lon2):
+    R = 6371.0
+    dlat = np.radians(lat2 - lat1)
+    dlon = np.radians(lon2 - lon1)
+    a = np.sin(dlat / 2)**2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon / 2)**2
+    return 2 * R * np.arcsin(np.sqrt(a))
+
+br0_ocultados = 0
+for t in trechos_list:
+    if t['br'] in ['BR-0', 'BR-00', 'BR-000'] or t['id'].startswith('BR0_'):
+        t['ocultar_mapa'] = True
+        t['motivo_ocultacao'] = "Código genérico PRF (BR-0)"
+        br0_ocultados += 1
+    else:
+        t['ocultar_mapa'] = False
+
+pares_coincidentes = []
+for i in range(len(trechos_list)):
+    t1 = trechos_list[i]
+    if t1['ocultar_mapa']:
+        continue
+    c1 = t1.get('coords', {})
+    lat1, lon1 = c1.get('lat'), c1.get('lon')
+    if lat1 is None or (lat1 == -15.78 and lon1 == -47.92):
+        continue
+    for j in range(i + 1, len(trechos_list)):
+        t2 = trechos_list[j]
+        if t2['ocultar_mapa']:
+            continue
+        if t1['uf'] != t2['uf']:
+            continue
+        if t1['br'] == t2['br']:
+            continue
+        c2 = t2.get('coords', {})
+        lat2, lon2 = c2.get('lat'), c2.get('lon')
+        if lat2 is None or (lat2 == -15.78 and lon2 == -47.92):
+            continue
+        
+        dist = haversine_km(lat1, lon1, lat2, lon2)
+        if dist < 2.0:
+            pares_coincidentes.append((dist, t1, t2))
+
+coincidentes_ocultados = 0
+for dist, t1, t2 in sorted(pares_coincidentes, key=lambda x: x[0]):
+    if t1.get('ocultar_mapa') and t2.get('ocultar_mapa'):
+        continue
+    
+    if t1['acidentes'] >= t2['acidentes']:
+        manter, ocultar = t1, t2
+    else:
+        manter, ocultar = t2, t1
+    
+    if not ocultar.get('ocultar_mapa'):
+        ocultar['ocultar_mapa'] = True
+        ocultar['sobreposto_com'] = manter['br']
+        ocultar['motivo_ocultacao'] = f"Sobreposto fisicamente com {manter['br']} (distância: {dist:.2f} km)"
+        coincidentes_ocultados += 1
+
+print(f"       -> [Filtro Cartográfico] {br0_ocultados} trechos BR-0 e {coincidentes_ocultados} trechos coincidentes marcados com ocultar_mapa: True.")
+print(f"       -> {len(trechos_list) - (br0_ocultados + coincidentes_ocultados)} trechos visíveis no mapa vetorial.")
+
 dados_finais = {
     'metadata': {
         'titulo': "Observatório de Tráfego Preditivo - Escala Meso Nacional",

@@ -241,21 +241,27 @@ function atualizarCamadaMapa() {
         trechos = trechos.filter(t => t.uf === ufFiltro);
     }
 
+    // Trechos a desenhar no mapa (ignora sobrepostos coincidentes e códigos genéricos BR-0)
+    const trechosDesenho = trechos.filter(t => !t.ocultar_mapa);
+
     // Texto de status do mapa
     if (layerModo === 'todos') {
         document.getElementById('statusMapaTrechos').innerText = 
-            `Exibindo ${trechos.length.toLocaleString('pt-BR')} trechos monitorados ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
+            `Exibindo ${trechosDesenho.length.toLocaleString('pt-BR')} trechos desenhados ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
     } else if (layerModo === 'chuva') {
-        const qtdSig = trechos.filter(t => t.chuva_sig).length;
+        const qtdSig = trechosDesenho.filter(t => t.chuva_sig).length;
         document.getElementById('statusMapaTrechos').innerText = 
-            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis à chuva de ${trechos.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
+            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis à chuva de ${trechosDesenho.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
     } else if (layerModo === 'feriado') {
-        const qtdSig = trechos.filter(t => t.feriado_sig).length;
+        const qtdSig = trechosDesenho.filter(t => t.feriado_sig).length;
         document.getElementById('statusMapaTrechos').innerText = 
-            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis a feriados de ${trechos.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
+            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis a feriados de ${trechosDesenho.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
     }
 
     trechos.forEach(t => {
+        // Ignora trechos coincidentes/duplicados e códigos genéricos da PRF exclusivamente no mapa
+        if (t.ocultar_mapa) return;
+
         const c = t.coords;
         if (!c || isNaN(c.lat) || isNaN(c.lon)) return;
 
