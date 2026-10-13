@@ -1,6 +1,6 @@
 """
 Script de Extração e Otimização de Dados para o Frontend Web (Vercel)
-Lê o relatório censitário nacional (CSV/MD), calcula coordenadas geográficas reais dos trechos
+Lê o relatório censitário nacional (CSV/MD), calcula o traçado poli-linhal real das rodovias (sub-km a cada 2 km)
 e extrai parâmetros preditivos SARIMAX para alimentar o Observatório Nacional e o Simulador.
 """
 import os
@@ -19,6 +19,7 @@ DIR_TCC = DIR_ATUAL.parent / "TCC"
 CSV_RESULTADOS = DIR_TCC / "resultado_meso_todos_estados_20km.csv"
 MODELS_DIR = DIR_TCC / "models" / "meso"
 JSON_SAIDA = DIR_ATUAL / "dados_meso_nacional.json"
+JS_SAIDA = DIR_ATUAL / "dados_meso_nacional.js"
 
 sys.path.append(str(DIR_TCC / "src"))
 from config import DB_URI
@@ -27,7 +28,20 @@ print("[1/5] Lendo resultado_meso_todos_estados_20km.csv...")
 df_res = pd.read_csv(CSV_RESULTADOS)
 print(f"       -> Carregados {len(df_res)} registros do CSV.")
 
-print("[2/5] Consultando coordenadas geográficas reais no PostgreSQL...")
+# Cache de baselines existentes para evitar reprocessamento pesado de 3.000 joblibs
+baselines_cache = {}
+if JSON_SAIDA.exists():
+    try:
+        with open(JSON_SAIDA, 'r', encoding='utf-8') as f_exist:
+            d_exist = json.load(f_exist)
+            for t in d_exist.get('trechos', []):
+                if 'baseline' in t:
+                    baselines_cache[t['id']] = t['baseline']
+        print(f"       -> {len(baselines_cache)} baselines reaproveitados do cache existente.")
+    except Exception as e:
+        print(f"       -> Aviso: não foi possível ler cache existente: {e}")
+
+print("[2/5] Consultando e reconstruindo o traçado curvilíneo real no PostgreSQL...")
 engine = create_engine(DB_URI)
 query_coords = """
     SELECT 
@@ -46,36 +60,49 @@ query_coords = """
 t0 = time.time()
 with engine.connect() as conn:
     df_prf = pd.read_sql(text(query_coords), conn)
-print(f"       -> {len(df_prf):,} sinistros carregados em {time.time() - t0:.2f}s. Agrupando trechos...")
+print(f"       -> {len(df_prf):,} sinistros carregados em {time.time() - t0:.2f}s.")
 
-df_prf = df_prf.sort_values(by=['uf', 'br', 'km_inicio', 'km_real'])
-df_coords = df_prf.groupby(['uf', 'br', 'km_inicio']).agg(
-    qtd=('km_real', 'count'),
+# Subdivisão em blocos de 2 km ao longo da rodovia
+df_prf['km_sub'] = np.floor(df_prf['km_real'] / 2.0) * 2.0
+
+# Filtro de robustez espacial contra erros de digitação de km no boletim da PRF
+# Calcula a mediana espacial de cada trecho de 20 km
+meds = df_prf.groupby(['uf', 'br', 'km_inicio'])[['lat', 'lon']].transform('median')
+dist_mediana = np.sqrt((df_prf['lat'] - meds['lat'])**2 + (df_prf['lon'] - meds['lon'])**2)
+df_clean = df_prf[dist_mediana < 0.25] # tolerância de ~25 km ao redor do centro do trecho
+
+print(f"       -> {len(df_clean):,} registros válidos após filtro espacial. Gerando polylines...")
+
+# Agrupamento por sub-ponto de 2 km ordenado
+df_subpts = df_clean.groupby(['uf', 'br', 'km_inicio', 'km_sub']).agg(
+    lat=('lat', 'median'),
+    lon=('lon', 'median')
+).reset_index().sort_values(by=['uf', 'br', 'km_inicio', 'km_sub'])
+
+# Centróide geral do trecho
+trechos_centros = df_clean.groupby(['uf', 'br', 'km_inicio']).agg(
     lat_avg=('lat', 'mean'),
-    lon_avg=('lon', 'mean'),
-    lat_ini=('lat', 'first'),
-    lon_ini=('lon', 'first'),
-    lat_fim=('lat', 'last'),
-    lon_fim=('lon', 'last')
+    lon_avg=('lon', 'mean')
 ).reset_index()
 
-# Dicionário de busca rápida por coordenadas
 coords_map = {}
-for _, r in df_coords.iterrows():
+for _, r in trechos_centros.iterrows():
     chave = f"{str(r['br']).strip().upper()}_{str(r['uf']).strip().upper()}_{float(r['km_inicio'])}"
+    sub = df_subpts[(df_subpts['uf'] == r['uf']) & (df_subpts['br'] == r['br']) & (df_subpts['km_inicio'] == r['km_inicio'])]
+    
+    pts = [[round(float(p.lat), 5), round(float(p.lon), 5)] for _, p in sub.iterrows()]
+    if len(pts) == 0:
+        pts = [[round(float(r['lat_avg']), 5), round(float(r['lon_avg']), 5)]]
+
     coords_map[chave] = {
         'lat': round(float(r['lat_avg']), 5),
         'lon': round(float(r['lon_avg']), 5),
-        'lat_ini': round(float(r['lat_ini']), 5),
-        'lon_ini': round(float(r['lon_ini']), 5),
-        'lat_fim': round(float(r['lat_fim']), 5),
-        'lon_fim': round(float(r['lon_fim']), 5)
+        'pts': pts
     }
 
-print(f"       -> {len(coords_map)} trechos com coordenadas geográficas mapeadas.")
+print(f"       -> {len(coords_map)} trechos com traçado curvo poli-linhal concluído.")
 
 print("[3/5] Compilando métricas agregadas por Estado e Macrorregião...")
-# Agregação por Estado
 estados_list = []
 ufs_unicas = sorted(df_res['uf'].unique())
 
@@ -104,7 +131,6 @@ for uf in ufs_unicas:
         'feriado_sig_pct': round(feriado_sig_pct, 1)
     })
 
-# Ordenar estados por volume total de sinistros decrescente
 estados_list.sort(key=lambda x: x['sinistros'], reverse=True)
 
 # Agregação por Macrorregião
@@ -150,7 +176,7 @@ top50_list = []
 for pos, (_, r) in enumerate(df_top50.iterrows(), start=1):
     br_num = str(r['rodovia']).replace('BR-', '').replace('br-', '').strip()
     chave = f"{br_num.upper()}_{str(r['uf']).strip().upper()}_{float(r['km_inicio'])}"
-    c = coords_map.get(chave, {'lat': -15.78, 'lon': -47.92, 'lat_ini': -15.78, 'lon_ini': -47.92, 'lat_fim': -15.78, 'lon_fim': -47.92})
+    c = coords_map.get(chave, {'lat': -15.78, 'lon': -47.92, 'pts': [[-15.78, -47.92]]})
     top50_list.append({
         'posicao': pos,
         'rodovia': f"BR-{br_num}",
@@ -173,48 +199,37 @@ for pos, (_, r) in enumerate(df_top50.iterrows(), start=1):
         'coords': c
     })
 
-print("[4/5] Processando os 3.019 trechos com parâmetros SARIMAX e baseline...")
+print("[4/5] Processando os 3.019 trechos com traçados curvos e parâmetros SARIMAX...")
 trechos_list = []
 X_zero = pd.DataFrame({'x_chuva': [0.0]*7, 'x_feriado': [0]*7, 'x_feriado_prolongado': [0]*7})
-
-# Extração rápida com fallback inteligente
-t_inicio_modelos = time.time()
-modelos_carregados = 0
 
 for idx, (_, r) in enumerate(df_res.iterrows()):
     br_clean = str(r['rodovia']).replace('BR-', '').replace('br-', '').strip()
     uf_clean = str(r['uf']).strip().upper()
     km_ini = float(r['km_inicio'])
     km_fim = float(r['km_fim'])
+    trecho_id = f"BR{br_clean}_{uf_clean}_{int(km_ini)}"
     
     chave = f"{br_clean.upper()}_{uf_clean}_{km_ini}"
     c = coords_map.get(chave, None)
     if not c:
-        # Fallback de centroide caso não esteja no mapa
-        c = {'lat': -15.78, 'lon': -47.92, 'lat_ini': -15.78, 'lon_ini': -47.92, 'lat_fim': -15.78, 'lon_fim': -47.92}
+        c = {'lat': -15.78, 'lon': -47.92, 'pts': [[-15.78, -47.92]]}
 
-    # Nome do arquivo de modelo
-    nome_arquivo = str(r['arquivo_modelo']).strip()
-    caminho_mod = MODELS_DIR / nome_arquivo
-    
-    # Baseline temporal de 7 dias
-    # Se o modelo existir e estiver acessível, carrega a baseline oficial
-    # Caso contrário, deriva a baseline do histórico diário calibrado
-    baseline_7d = None
-    if caminho_mod.exists() and modelos_carregados < 3500:
-        try:
-            m = joblib.load(caminho_mod)
-            p = m.predict(7, X=X_zero)
-            baseline_7d = [round(float(val), 4) for val in p]
-            modelos_carregados += 1
-        except Exception:
-            baseline_7d = None
+    # Baseline: reaproveita do cache de alta precisão existente
+    baseline_7d = baselines_cache.get(trecho_id)
+    if baseline_7d is None:
+        nome_arquivo = str(r['arquivo_modelo']).strip()
+        caminho_mod = MODELS_DIR / nome_arquivo
+        if caminho_mod.exists():
+            try:
+                m = joblib.load(caminho_mod)
+                p = m.predict(7, X=X_zero)
+                baseline_7d = [round(float(val), 4) for val in p]
+            except Exception:
+                baseline_7d = None
 
     if baseline_7d is None:
-        # Derivação analítica com base na taxa média e sazonalidade semanal
         taxa_diaria = float(r['acidentes_ano_media']) / 365.25
-        # Variação semanal típica rodoviária (segunda a domingo)
-        # Sábado e domingo ~1.15 e 1.25, dias úteis ~0.9 a 1.05
         fatores = [0.95, 0.90, 0.92, 0.98, 1.10, 1.25, 1.15]
         baseline_7d = [round(max(0.0, taxa_diaria * f), 4) for f in fatores]
 
@@ -223,7 +238,7 @@ for idx, (_, r) in enumerate(df_res.iterrows()):
     p_prolongado_val = float(r['p_valor_prolongado']) if pd.notnull(r['p_valor_prolongado']) else 1.0
 
     trechos_list.append({
-        'id': f"BR{br_clean}_{uf_clean}_{int(km_ini)}",
+        'id': trecho_id,
         'br': f"BR-{br_clean}",
         'uf': uf_clean,
         'regiao': str(r['regiao']).strip(),
@@ -249,12 +264,8 @@ for idx, (_, r) in enumerate(df_res.iterrows()):
         'baseline': baseline_7d
     })
 
-    if (idx + 1) % 500 == 0 or (idx + 1) == len(df_res):
-        print(f"       -> {idx + 1}/{len(df_res)} trechos processados ({modelos_carregados} lidos via joblib)...")
+print(f"       -> {len(trechos_list)} trechos processados com sucesso.")
 
-print(f"       -> Concluído em {time.time() - t_inicio_modelos:.2f}s.")
-
-# Estrutura consolidada final
 dados_finais = {
     'metadata': {
         'titulo': "Observatório de Tráfego Preditivo - Escala Meso Nacional",
@@ -276,9 +287,13 @@ dados_finais = {
     'trechos': trechos_list
 }
 
-print(f"[5/5] Gravando {JSON_SAIDA}...")
+print(f"[5/5] Gravando {JSON_SAIDA} e {JS_SAIDA}...")
+json_str = json.dumps(dados_finais, ensure_ascii=False)
 with open(JSON_SAIDA, 'w', encoding='utf-8') as f:
-    json.dump(dados_finais, f, ensure_ascii=False)
+    f.write(json_str)
+
+with open(JS_SAIDA, 'w', encoding='utf-8') as f:
+    f.write('window.DADOS_MESO_NACIONAL = ' + json_str + ';')
 
 tam_mb = JSON_SAIDA.stat().st_size / (1024 * 1024)
-print(f"\n[SUCESSO] Arquivo gerado com sucesso: {JSON_SAIDA.name} ({tam_mb:.2f} MB)")
+print(f"\n[SUCESSO] Arquivos gerados com sucesso: {JSON_SAIDA.name} e {JS_SAIDA.name} ({tam_mb:.2f} MB)")

@@ -274,14 +274,17 @@ function atualizarCamadaMapa() {
             opacidade = 0.95;
         }
 
-        const temPontosExtremos = (c.lat_ini !== c.lat_fim || c.lon_ini !== c.lon_fim) && !isNaN(c.lat_ini);
+        const pts = (c && c.pts && c.pts.length > 0) ? c.pts : (c.lat_ini ? [[c.lat_ini, c.lon_ini], [c.lat_fim, c.lon_fim]] : null);
         let elementoGrafico;
 
-        if (temPontosExtremos) {
-            elementoGrafico = L.polyline([[c.lat_ini, c.lon_ini], [c.lat_fim, c.lon_fim]], {
+        if (pts && pts.length > 1) {
+            elementoGrafico = L.polyline(pts, {
                 color: cor,
                 weight: peso,
-                opacity: opacidade
+                opacity: opacidade,
+                smoothFactor: 1.0,
+                lineCap: 'round',
+                lineJoin: 'round'
             });
         } else {
             elementoGrafico = L.circleMarker([c.lat, c.lon], {
