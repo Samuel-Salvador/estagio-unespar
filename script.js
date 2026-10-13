@@ -136,12 +136,25 @@ function inicializarMapa() {
         maxZoom: 14
     });
 
-    // Camada de Tiles elegante e limpa (CartoDB Positron / Voyager)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
-        subdomains: 'abcd',
+    // Camadas de mapa 100% gratuitas e sem exigência de API Key
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19
-    }).addTo(appState.mapa);
+    });
+
+    const esriGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+        maxZoom: 16
+    });
+
+    // Adiciona OpenStreetMap como camada padrão ativa
+    osmLayer.addTo(appState.mapa);
+
+    // Controle para alternar entre OpenStreetMap e Mapa Cinza Sóbrio
+    L.control.layers({
+        'OpenStreetMap (Padrão)': osmLayer,
+        'Mapa Sóbrio (Cinza)': esriGray
+    }, null, { position: 'topright' }).addTo(appState.mapa);
 
     appState.camadaVetorial = L.layerGroup().addTo(appState.mapa);
 
