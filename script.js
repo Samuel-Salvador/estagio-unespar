@@ -128,12 +128,19 @@ function inicializarMapa() {
     const mapEl = document.getElementById('mapaRodovias');
     if (!mapEl) return;
 
-    // Centro geográfico do Brasil
+    // Limites territoriais estritos do Brasil
+    const BRAZIL_BOUNDS = L.latLngBounds([
+        [-34.5, -74.5],
+        [5.5, -34.0]
+    ]);
+
     appState.mapa = L.map('mapaRodovias', {
-        center: [-14.235, -51.925],
+        center: [-14.5, -53.2],
         zoom: 4,
-        minZoom: 3,
-        maxZoom: 14
+        minZoom: 4,
+        maxZoom: 14,
+        maxBounds: BRAZIL_BOUNDS,
+        maxBoundsViscosity: 1.0 // Trava o mapa 100% no Brasil
     });
 
     // Camadas de mapa 100% gratuitas e sem exigência de API Key
@@ -150,6 +157,32 @@ function inicializarMapa() {
     // Adiciona OpenStreetMap como camada padrão ativa
     osmLayer.addTo(appState.mapa);
 
+    // Máscara opaca sobre os países vizinhos (destacando 100% apenas o território brasileiro)
+    if (window.BRASIL_MASCARA) {
+        L.geoJSON(window.BRASIL_MASCARA, {
+            style: {
+                fillColor: '#f8fafc',
+                fillOpacity: 0.94,
+                color: '#cbd5e1',
+                weight: 1.5
+            },
+            interactive: false
+        }).addTo(appState.mapa);
+    }
+
+    // Contorno oficial das fronteiras do Brasil (IBGE)
+    if (window.BRASIL_CONTORNO) {
+        L.geoJSON(window.BRASIL_CONTORNO, {
+            style: {
+                fillOpacity: 0,
+                color: '#334155',
+                weight: 1.8,
+                dashArray: '4, 4'
+            },
+            interactive: false
+        }).addTo(appState.mapa);
+    }
+
     // Controle para alternar entre OpenStreetMap e Mapa Cinza Sóbrio
     L.control.layers({
         'OpenStreetMap (Padrão)': osmLayer,
@@ -157,6 +190,7 @@ function inicializarMapa() {
     }, null, { position: 'topright' }).addTo(appState.mapa);
 
     appState.camadaVetorial = L.layerGroup().addTo(appState.mapa);
+    appState.mapa.fitBounds(BRAZIL_BOUNDS, { padding: [10, 10] });
 
     // Eventos dos botões de camada rápida
     document.querySelectorAll('.btn-pill[data-layer]').forEach(btn => {
@@ -322,7 +356,8 @@ function ajustarZoomMapaPorUf(uf) {
     if (!appState.mapa) return;
 
     if (uf === 'TODAS' || !UFS_BOUNDS[uf]) {
-        appState.mapa.setView([-14.235, -51.925], 4);
+        const BRAZIL_BOUNDS = L.latLngBounds([[-34.5, -74.5], [5.5, -34.0]]);
+        appState.mapa.fitBounds(BRAZIL_BOUNDS, { padding: [10, 10] });
     } else {
         const bounds = UFS_BOUNDS[uf];
         appState.mapa.fitBounds(bounds, { padding: [20, 20], maxZoom: 8 });
