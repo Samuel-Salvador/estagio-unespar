@@ -3,24 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Previsão - TCC</title>
+    <title>Observatório de Tráfego Preditivo — TCC UNESPAR</title>
+    <!-- Fontes Google -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Chart.js para gráficos estatísticos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet para visualização geográfica do mapa rodoviário -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Ícones Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Folha de Estilos Principal -->
     <link rel="stylesheet" href="style.css">
+    <!-- Dados Consolidados em Cache Local (Zero-CORS / Vercel Ready) -->
+    <script src="dados_meso_nacional.js"></script>
 </head>
 <body>
 
+    <!-- Barra Lateral de Navegação -->
     <aside>
         <div class="brand">
             <h2>Observatório de Tráfego Preditivo</h2>
+            <span>Escala Meso Nacional (27 UFs)</span>
         </div>
         <nav>
             <a href="#" class="nav-link active" data-target="sobre">
-                <i data-lucide="file-text"></i> Fundamentação Teórica
+                <i data-lucide="book-open"></i> Fundamentação Teórica
             </a>
-            <a href="#" class="nav-link" data-target="dashboard">
-                <i data-lucide="line-chart"></i> Protótipo de Visualização
+            <a href="#" class="nav-link" data-target="observatorio">
+                <i data-lucide="map-pin"></i> Resultados Nacionais & Mapa
+            </a>
+            <a href="#" class="nav-link" data-target="previsao">
+                <i data-lucide="trending-up"></i> Previsão SARIMAX
             </a>
         </nav>
         
@@ -32,47 +46,50 @@
         </div>
     </aside>
 
+    <!-- Conteúdo Principal -->
     <main>
         <div class="content-body">
             
+            <!-- ABA 1: FUNDAMENTAÇÃO TEÓRICA -->
             <section id="sobre" class="page-section active doc-section">
-                <h1>Previsão de Acidentes</h1>
+                <h1>Previsão de Acidentes em Rodovias Federais</h1>
                 <p>
-                    Esta é uma página demonstrativa do Trabalho de Conclusão de Curso (TCC) que propõe a integração de modelos estatísticos de 
-                    previsão de séries temporais com dados abertos de segurança pública. O objetivo central é fornecer uma base preditiva para o gerenciamento de tráfego, 
+                    Esta aplicação sintetiza os resultados empíricos do Trabalho de Conclusão de Curso (TCC) voltado à integração de modelos estatísticos de 
+                    previsão de séries temporais com dados abertos de segurança pública da Polícia Rodoviária Federal (PRF) e telemetria meteorológica do INMET. O objetivo central é fornecer uma base preditiva para o gerenciamento de tráfego, 
                     alinhando-se aos conceitos de <strong>Cidades Inteligentes</strong>, onde a tomada de decisão para alocação de recursos 
-                    (como viaturas de resgate e policiamento ostensivo) deixa de ser reativa e passa a ser proativa.
+                    (como viaturas de resgate e policiamento ostensivo) deixa de ser puramente reativa e passa a ser proativa.
                 </p>
 
-                <h2>1. A Base de Dados da PRF</h2>
+                <h2>1. A Base de Dados da PRF e Cobertura Censitária</h2>
                 <p>
                     O modelo é alimentado pela base de dados abertos da 
-                    <strong>Polícia Rodoviária Federal (PRF)</strong>.
-                     Este conjunto de dados históricos cataloga todas as ocorrências de trânsito em rodovias federais, 
-                     fornecendo uma riqueza de variáveis que vão muito além da simples contagem de acidentes.
+                    <strong>Polícia Rodoviária Federal (PRF)</strong> compreendendo o quinquênio de 2020 a 2024 (1.827 dias).
+                    Este conjunto de dados cataloga todas as ocorrências de trânsito na malha rodoviária federal sob jurisdição da corporação em todas as 27 Unidades Federativas.
                 </p>
                 
                 <a href="https://www.gov.br/prf/pt-br/acesso-a-informacao/dados-abertos/dados-abertos-da-prf" target="_blank" rel="noopener noreferrer" class="reference-link">
-                    <i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
+                    <i data-lucide="external-link"></i>
                     Acessar Portal de Dados Abertos da PRF
                 </a>
-                <p>Para a modelagem, os dados passam por um processo de ETL (Extração, Transformação e Carga) para serem agrupados temporalmente (ex: frequência diária ou semanal de acidentes) e espacialmente (filtrados por trechos rodoviários específicos). As principais variáveis extraídas incluem:</p>
+                <p>
+                    Para a modelagem, os dados passaram por um rigoroso processo de ETL (Extração, Transformação e Carga) com agrupamento espacial em unidades isométricas de <strong>B = 20 km</strong> e agregação temporal diária com <em>zero-filling</em> estrito. Foram modelados <strong>3.019 trechos rodoviários</strong>, totalizando <strong>332.679 sinistros</strong> catalogados.
+                </p>
                 <ul>
-                    <li><strong>Variáveis Endógenas:</strong> A própria contagem histórica de acidentes ao longo do tempo.</li>
-                    <li><strong>Variáveis Espaciais:</strong> Identificação da rodovia (ex: BR-369, BR-277), quilometragem e tipo de pista.</li>
-                    <li><strong>Variáveis Exógenas:</strong> Condições meteorológicas no momento do acidente (chuva, céu claro, neblina), 
-                        fase do dia (dia/noite) e calendário (dias úteis, finais de semana, feriados).</li>
+                    <li><strong>Variáveis Endógenas:</strong> Série temporal contínua da contagem diária de acidentes em cada segmento de 20 km.</li>
+                    <li><strong>Variáveis Espaciais:</strong> Identificação da rodovia (ex: BR-101, BR-116, BR-381, BR-369), Unidade Federativa e marco quilométrico.</li>
+                    <li><strong>Variáveis Exógenas Climáticas:</strong> Precipitação pluviométrica acumulada diária (em mm) obtida via estações telemétricas automáticas do INMET mais próximas a cada trecho.</li>
+                    <li><strong>Variáveis Exógenas Operacionais:</strong> Marcadores de calendário indicando feriados nacionais oficiais e feriados prolongados.</li>
                 </ul>
 
                 <h2>2. O Modelo Matemático: SARIMAX</h2>
                 <p>
-                    Para realizar as previsões, optou-se pelo algoritmo <strong>SARIMAX</strong> 
+                    Para realizar as previsões fora da amostra (conjunto de teste com os 366 dias de 2024), empregou-se o algoritmo <strong>SARIMAX</strong> 
                     (<em>Seasonal AutoRegressive Integrated Moving Average with eXogenous variables</em>).
-                     Este é um dos métodos mais robustos para modelagem de séries temporais não-estacionárias que apresentam sazonalidade e dependem de fatores externos.
+                    Este é um dos métodos mais robustos para modelagem de séries temporais não-estacionárias que apresentam hiper-esparsidade, sazonalidade e dependem de fatores externos.
                 </p>
                 
                 <div class="math-block">
-                    SARIMAX (p, d, q) × (P, D, Q)<sub>s</sub>
+                    SARIMAX (p, d, q) × (P, D, Q)<sub>s=7</sub> + &beta;<sub>chuva</sub> · X<sub>chuva</sub> + &beta;<sub>feriado</sub> · X<sub>feriado</sub> + &beta;<sub>prolongado</sub> · X<sub>prolongado</sub>
                 </div>
 
                 <p>O modelo é decomposto nas seguintes estruturas operacionais:</p>
@@ -80,69 +97,349 @@
                 <h3>Componentes Não-Sazonais (ARIMA)</h3>
                 <ul>
                     <li><strong>AR (p) - Autorregressivo:</strong> 
-                        Indica que a previsão de acidentes de amanhã depende de uma combinação linear dos acidentes ocorridos nos dias anteriores. 
-                        O parâmetro <em>p</em> define a janela de atraso (lags).</li>
-                    <li><strong>
-                        I (d) - Integrado:</strong> 
-                        Representa o número de diferenciações necessárias para tornar a série temporal estacionária 
-                        (estabilizar a média e a variância ao longo do tempo, removendo tendências de crescimento ou queda a longo prazo).</li>
+                        Indica que a previsão de acidentes de amanhã depende de uma combinação linear dos acidentes ocorridos nos dias anteriores. O parâmetro <em>p</em> define a janela de atraso (lags).</li>
+                    <li><strong>I (d) - Integrado:</strong> 
+                        Representa o número de diferenciações necessárias para tornar a série temporal estacionária, estabilizando a média e a variância ao longo do tempo.</li>
                     <li><strong>MA (q) - Média Móvel:</strong> 
-                        Modela o erro da previsão como uma combinação linear dos erros de previsões passadas. 
-                        O parâmetro <em>q</em> define a janela desses erros.</li>
+                        Modela o erro da previsão como uma combinação linear dos choques aleatórios passados.</li>
                 </ul>
 
                 <h3>Componentes Sazonais (S)</h3>
                 <p>
-                    O tráfego rodoviário possui flutuações cíclicas evidentes. Os parâmetros <strong>(P, D, Q)<sub>s</sub></strong> replicam a lógica do ARIMA, mas aplicados aos períodos sazonais. O fator <em>s</em> representa o tamanho do ciclo. Em dados diários de trânsito, <em>s=7</em> captura perfeitamente o padrão semanal, onde sábados e domingos apresentam naturezas de acidentes diferentes de terças e quartas-feiras.
+                    O tráfego rodoviário possui flutuações cíclicas evidentes. Com <strong>s = 7</strong>, o SARIMAX captura a sazonalidade semanal completa, distinguindo a dinâmica de dias úteis com tráfego comercial pendular da sinistralidade típica de sextas-feiras e finais de semana.
                 </p>
 
-                <h3>Variáveis Exógenas (X)</h3>
+                <h3>Matriz de Variáveis Exógenas (X)</h3>
                 <p>
-                    A principal justificativa para o uso do SARIMAX ao invés do clássico SARIMA é a inclusão da matriz de variáveis exógenas (X). No contexto deste TCC, a série temporal de acidentes não é tratada como um sistema isolado. A matriz introduz as características da base da PRF, permitindo que o modelo ajuste as previsões dinamicamente caso o trecho analisado esteja sob <strong>chuva intensa</strong> ou em véspera de <strong>feriado prolongado</strong>.
+                    A matriz exógena introduz os coeficientes analíticos de elasticidade:
+                    <strong>&beta;<sub>chuva</sub></strong> quantifica a variação esperada na probabilidade de acidentes para cada milímetro de chuva acumulada na rodovia, enquanto 
+                    <strong>&beta;<sub>feriado</sub></strong> e <strong>&beta;<sub>prolongado</sub></strong> capturam o choque de demanda nos fluxos turísticos e de lazer.
                 </p>
-
             </section>
 
-            <section id="dashboard" class="page-section">
-                <div class="doc-section">
-                    <h1>Visualização de Dados (Protótipo)</h1>
-                    <p>Interface de simulação das requisições ao backend Python. Altere as variáveis exógenas e espaciais abaixo para visualizar como o modelo SARIMAX ajustará a previsão de incidência de acidentes para os próximos 7 dias.</p>
+            <!-- ABA 2: RESULTADOS NACIONAIS, MAPA E TABELAS -->
+            <section id="observatorio" class="page-section">
+                <div class="section-header">
+                    <h1>Observatório de Tráfego Preditivo — Escala Meso Nacional</h1>
+                    <p>
+                        Painel censitário com os resultados dos 3.019 modelos SARIMAX ajustados para todos os trechos rodoviários federais de 20 km nas 27 UFs do Brasil (2020 a 2024).
+                    </p>
                 </div>
 
-                <div class="dashboard-layout">
-                    <div class="controls-panel">
-                        <div class="form-group">
-                            <label>Rodovia (Filtro Espacial)</label>
-                            <select id="rodovia">
-                                <option value="br369">BR-369 (Londrina - PR)</option>
-                                <option value="br376">BR-376 (Contorno Sul)</option>
-                            </select>
+                <!-- Grid de KPIs Globais -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Trechos de 20 km</span>
+                            <div class="kpi-icon"><i data-lucide="layers"></i></div>
                         </div>
-                        <div class="form-group">
-                            <label>Condição Climática (Exógena 1)</label>
-                            <select id="clima">
-                                <option value="sol">Céu Claro</option>
-                                <option value="chuva">Chuva / Pista Molhada</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Calendário (Exógena 2)</label>
-                            <select id="feriado">
-                                <option value="0">Semana Convencional</option>
-                                <option value="1">Feriado Prolongado</option>
-                            </select>
-                        </div>
-                        <button class="btn-predict" id="btnPrever">Processar SARIMAX</button>
+                        <div class="kpi-value" id="kpiTrechos">3.019</div>
+                        <div class="kpi-subtext">27 / 27 UFs brasileiras cobertas</div>
                     </div>
 
-                    <div class="chart-box">
-                        <canvas id="sarimaxChart"></canvas>
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Sinistros Mapeados</span>
+                            <div class="kpi-icon"><i data-lucide="alert-triangle"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpiSinistros">332.679</div>
+                        <div class="kpi-subtext">Quinquênio 2020–2024 (PRF)</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Esparsidade Global</span>
+                            <div class="kpi-icon"><i data-lucide="percent"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpiEsparsidade">94.8%</div>
+                        <div class="kpi-subtext">Média de dias sem sinistro</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Ruído Branco</span>
+                            <div class="kpi-icon"><i data-lucide="check-circle-2"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpiRuido">92.0%</div>
+                        <div class="kpi-subtext"><span class="kpi-badge badge-white">Ljung-Box p > 0.05</span></div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Sensibilidade à Chuva</span>
+                            <div class="kpi-icon"><i data-lucide="cloud-rain"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpiChuva">42.7%</div>
+                        <div class="kpi-subtext"><span class="kpi-badge badge-rain">&beta; chuva (p < 0.05)</span></div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-card-header">
+                            <span class="kpi-title">Sensibilidade Feriados</span>
+                            <div class="kpi-icon"><i data-lucide="calendar"></i></div>
+                        </div>
+                        <div class="kpi-value" id="kpiFeriado">12.2%</div>
+                        <div class="kpi-subtext"><span class="kpi-badge badge-holiday">&beta; feriados (p < 0.05)</span></div>
+                    </div>
+                </div>
+
+                <!-- Painel do Mapa Interativo das Rodovias -->
+                <div class="map-section-card">
+                    <div class="map-toolbar">
+                        <div class="map-filters">
+                            <div class="filter-group">
+                                <label for="filtroUfMapa" class="filter-label"><i data-lucide="compass" style="width:16px;height:16px;display:inline;"></i> Filtrar Estado:</label>
+                                <select id="filtroUfMapa" class="select-custom">
+                                    <option value="TODAS">Brasil Geral (Todas as 27 UFs)</option>
+                                    <!-- Preenchido via script.js -->
+                                </select>
+                            </div>
+
+                            <div class="pill-group">
+                                <button class="btn-pill active" data-layer="todos" id="btnLayerTodos">
+                                    <i data-lucide="grid"></i> Todas as Rodovias
+                                </button>
+                                <button class="btn-pill pill-rain" data-layer="chuva" id="btnLayerChuva">
+                                    <i data-lucide="cloud-rain"></i> Mais Afetadas por Chuva
+                                </button>
+                                <button class="btn-pill pill-holiday" data-layer="feriado" id="btnLayerFeriado">
+                                    <i data-lucide="calendar"></i> Mais Afetadas por Feriados
+                                </button>
+                                <button class="btn-pill pill-critical" data-layer="top50" id="btnLayerTop50">
+                                    <i data-lucide="flame"></i> Top 50 Segmentos Críticos
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="statusMapaTrechos" style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">
+                            Exibindo 3.019 trechos no Brasil
+                        </div>
+                    </div>
+
+                    <div class="map-container-wrapper">
+                        <div id="mapaRodovias"></div>
+                        <div class="map-legend">
+                            <div class="legend-title">Camadas & Intensidade</div>
+                            <div class="legend-item">
+                                <div class="legend-line" style="background:#0284c7;"></div>
+                                <span>Sensibilidade à Chuva (p &lt; 0.05)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line" style="background:#ea580c;"></div>
+                                <span>Sensibilidade a Feriados (p &lt; 0.05)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line" style="background:#dc2626;"></div>
+                                <span>Top 50 Segmentos Críticos (&ge; 860 sinistros)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-line" style="background:#94a3b8;"></div>
+                                <span>Demais trechos monitorados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráficos Dinâmicos Lado a Lado -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title" id="tituloChartChuva">Sensibilidade Pluviométrica Regional (&beta; chuva)</h3>
+                                <div class="chart-card-subtitle" id="subtituloChartChuva">% de trechos por estado com correlação estatística à chuva (p &lt; 0.05)</div>
+                            </div>
+                            <span class="kpi-badge badge-rain">Média BR: 42.7%</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartChuva"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <div>
+                                <h3 class="chart-card-title" id="tituloChartFeriado">Sensibilidade a Feriados e Turismo (&beta; feriado)</h3>
+                                <div class="chart-card-subtitle" id="subtituloChartFeriado">% de trechos com elevação de risco em feriados nacionais/prolongados</div>
+                            </div>
+                            <span class="kpi-badge badge-holiday">Média BR: 12.2%</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chartFeriado"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Completa e Interativa com Abas -->
+                <div class="table-card">
+                    <div class="table-header-controls">
+                        <div class="table-tabs">
+                            <button class="table-tab-btn active" data-table="ufs">27 Estados (UFs)</button>
+                            <button class="table-tab-btn" data-table="regioes">5 Macrorregiões</button>
+                            <button class="table-tab-btn" data-table="top50">Top 50 Segmentos Críticos</button>
+                            <button class="table-tab-btn" data-table="todos">Todos os 3.019 Trechos</button>
+                        </div>
+
+                        <div class="search-input-wrapper">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="inputBuscaTabela" placeholder="Buscar por UF, Rodovia, Região...">
+                        </div>
+                    </div>
+
+                    <div class="table-scroll">
+                        <table id="tabelaResultados" class="data-table">
+                            <thead id="tabelaHead">
+                                <!-- Preenchido dinamicamente -->
+                            </thead>
+                            <tbody id="tabelaBody">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="table-footer">
+                        <div id="tabelaInfoContador">Exibindo registros</div>
+                        <div class="pagination-controls" id="paginacaoControles" style="display:none;">
+                            <button class="btn-page" id="btnPagePrev"><i data-lucide="chevron-left"></i> Anterior</button>
+                            <span id="labelPaginaAtual" style="font-weight:600; padding:0.35rem 0.5rem;">Página 1 de 1</span>
+                            <button class="btn-page" id="btnPageNext">Próxima <i data-lucide="chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ABA 3: PREVISÃO SARIMAX (INFERÊNCIA FUTURA REAL) -->
+            <section id="previsao" class="page-section">
+                <div class="section-header">
+                    <h1>Simulador de Previsão Futura — SARIMAX</h1>
+                    <p>
+                        Selecione qualquer trecho da malha rodoviária federal e configure o cenário de precipitação e feriados.
+                        O motor executa a previsão utilizando a parametrização do modelo real treinado para aquele segmento.
+                    </p>
+                </div>
+
+                <div class="predict-layout">
+                    <!-- Coluna de Controles e Variáveis -->
+                    <div class="predict-form-card">
+                        <div class="form-section-title">1. Localização Espacial</div>
+                        
+                        <div class="form-group">
+                            <label for="prevUf">Estado (UF)</label>
+                            <select id="prevUf" class="select-custom">
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="prevRodovia">Rodovia Federal (BR)</label>
+                            <select id="prevRodovia" class="select-custom">
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="prevTrecho">Segmento Isométrico (20 km)</label>
+                            <select id="prevTrecho" class="select-custom">
+                                <!-- Preenchido dinamicamente -->
+                            </select>
+                        </div>
+
+                        <!-- Card com Metadados Reais do Trecho Selecionado -->
+                        <div id="prevTrechoSummary" class="selected-trecho-summary">
+                            <div><strong>Carregando modelo...</strong></div>
+                        </div>
+
+                        <div class="form-section-title">2. Condições Climáticas (Exógena 1)</div>
+                        <div class="form-group">
+                            <label for="prevCenarioChuva">Cenário Rápido de Precipitação</label>
+                            <select id="prevCenarioChuva" class="select-custom">
+                                <option value="seco">Tempo Seco / Céu Claro (0 mm)</option>
+                                <option value="leve">Chuva Leve (5 mm/dia)</option>
+                                <option value="moderada" selected>Chuva Moderada / Pista Molhada (15 mm/dia)</option>
+                                <option value="tempestade">Tempestade Severa (40 mm/dia)</option>
+                                <option value="fim_de_semana">Chuva Concentrada no Fim de Semana (30 mm)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-section-title">3. Calendário Operacional (Exógena 2)</div>
+                        <div class="form-group">
+                            <label for="prevCenarioFeriado">Cenário de Feriado</label>
+                            <select id="prevCenarioFeriado" class="select-custom">
+                                <option value="nenhum">Semana Típica (Sem Feriados)</option>
+                                <option value="prolongado" selected>Feriado Prolongado (Sexta-feira)</option>
+                                <option value="meio_semana">Feriado no Meio da Semana (Quarta-feira)</option>
+                            </select>
+                        </div>
+
+                        <button id="btnExecutarPrevisao" class="btn-run-predict">
+                            <i data-lucide="play"></i> Processar SARIMAX
+                        </button>
+                    </div>
+
+                    <!-- Coluna de Resultados e Gráficos -->
+                    <div class="predict-results-panel">
+                        <!-- Cards de Resultados -->
+                        <div class="results-summary-grid">
+                            <div class="res-card">
+                                <div class="res-card-label">Previsão 7 Dias</div>
+                                <div class="res-card-val" id="resTotalPrevisto">0.0</div>
+                                <div class="res-card-sub">Sinistros totais projetados</div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-label">Impacto Exógeno</div>
+                                <div class="res-card-val" id="resImpactoExogeno" style="color:var(--primary);">+0.0%</div>
+                                <div class="res-card-sub" id="resImpactoExogenoDesc">vs. cenário sem chuva/feriado</div>
+                            </div>
+
+                            <div class="res-card">
+                                <div class="res-card-label">Intervalo de Confiança (95%)</div>
+                                <div class="res-card-val" id="resIntervaloConfianca" style="font-size:1.35rem;">[0.0 — 0.0]</div>
+                                <div class="res-card-sub">Faixa estatística esperada</div>
+                            </div>
+                        </div>
+
+                        <!-- Gráfico da Projeção Diária -->
+                        <div class="predict-chart-card">
+                            <div class="chart-card-header">
+                                <div>
+                                    <h3 class="chart-card-title">Curva de Incidência Projetada (Próximos 7 Dias)</h3>
+                                    <div class="chart-card-subtitle">Comparativo entre o cenário com variáveis exógenas e a linha de base histórica</div>
+                                </div>
+                                <span class="kpi-badge badge-rain" id="badgeModeloOrdem">SARIMAX</span>
+                            </div>
+                            <div class="chart-wrapper">
+                                <canvas id="chartPrevisao"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Tabela Diária Detalhada -->
+                        <div class="predict-table-card">
+                            <h3 class="chart-card-title" style="margin-bottom:1rem;">Projeção Detalhada por Dia</h3>
+                            <div class="table-scroll" style="max-height:280px;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Data / Dia</th>
+                                            <th>Previsão (&plusmn; IC 95%)</th>
+                                            <th>Chuva (mm)</th>
+                                            <th>Feriado</th>
+                                            <th>Risco Relativo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="corpoTabelaPrevisao">
+                                        <!-- Preenchido via script.js -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
         </div>
     </main>
+
+    <!-- Script de Lógica do Frontend -->
     <script src="script.js"></script>
 </body>
 </html>
