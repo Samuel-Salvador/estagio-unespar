@@ -207,9 +207,6 @@
                                 <button class="btn-pill pill-holiday" data-layer="feriado" id="btnLayerFeriado">
                                     <i data-lucide="calendar"></i> Mais Afetadas por Feriados
                                 </button>
-                                <button class="btn-pill pill-critical" data-layer="top50" id="btnLayerTop50">
-                                    <i data-lucide="flame"></i> Top 50 Segmentos Críticos
-                                </button>
                             </div>
                         </div>
 
@@ -221,22 +218,12 @@
                     <div class="map-container-wrapper">
                         <div id="mapaRodovias"></div>
                         <div class="map-legend">
-                            <div class="legend-title">Camadas & Intensidade</div>
-                            <div class="legend-item">
-                                <div class="legend-line" style="background:#0284c7;"></div>
-                                <span>Sensibilidade à Chuva (p &lt; 0.05)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-line" style="background:#ea580c;"></div>
-                                <span>Sensibilidade a Feriados (p &lt; 0.05)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-line" style="background:#dc2626;"></div>
-                                <span>Top 50 Segmentos Críticos (&ge; 860 sinistros)</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-line" style="background:#94a3b8;"></div>
-                                <span>Demais trechos monitorados</span>
+                            <div class="legend-title">Legenda</div>
+                            <div id="conteudoLegendaMapa">
+                                <div class="legend-item">
+                                    <div class="legend-line" style="background:#2563eb;"></div>
+                                    <span>Trecho monitorado</span>
+                                </div>
                             </div>
                         </div>
                     </div>

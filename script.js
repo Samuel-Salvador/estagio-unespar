@@ -199,6 +199,7 @@ function inicializarMapa() {
             btn.classList.add('active');
             appState.camadaAtiva = btn.getAttribute('data-layer');
             atualizarCamadaMapa();
+            atualizarLegendaMapa(appState.camadaAtiva);
         });
     });
 
@@ -212,6 +213,7 @@ function inicializarMapa() {
     });
 
     atualizarCamadaMapa();
+    atualizarLegendaMapa(appState.camadaAtiva);
 }
 
 function configurarFiltrosObservatorio() {
@@ -239,39 +241,53 @@ function atualizarCamadaMapa() {
         trechos = trechos.filter(t => t.uf === ufFiltro);
     }
 
-    if (layerModo === 'chuva') {
-        trechos = trechos.filter(t => t.chuva_sig);
+    // Texto de status do mapa
+    if (layerModo === 'todos') {
+        document.getElementById('statusMapaTrechos').innerText = 
+            `Exibindo ${trechos.length.toLocaleString('pt-BR')} trechos monitorados ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
+    } else if (layerModo === 'chuva') {
+        const qtdSig = trechos.filter(t => t.chuva_sig).length;
+        document.getElementById('statusMapaTrechos').innerText = 
+            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis à chuva de ${trechos.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
     } else if (layerModo === 'feriado') {
-        trechos = trechos.filter(t => t.feriado_sig);
-    } else if (layerModo === 'top50') {
-        const top50Ids = new Set(appState.dados.top50.map(t => `${t.rodovia.replace('BR-','')}_${t.uf}_${parseInt(t.segmento.split('–')[0].replace('km ',''))}`));
-        trechos = trechos.filter(t => top50Ids.has(`${t.br.replace('BR-','')}_${t.uf}_${t.km_inicio}`));
+        const qtdSig = trechos.filter(t => t.feriado_sig).length;
+        document.getElementById('statusMapaTrechos').innerText = 
+            `Exibindo ${qtdSig.toLocaleString('pt-BR')} trechos sensíveis a feriados de ${trechos.length.toLocaleString('pt-BR')} ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
     }
-
-    document.getElementById('statusMapaTrechos').innerText = 
-        `Exibindo ${trechos.length.toLocaleString('pt-BR')} trechos ${ufFiltro !== 'TODAS' ? 'em ' + ufFiltro : 'no Brasil'}`;
 
     trechos.forEach(t => {
         const c = t.coords;
         if (!c || isNaN(c.lat) || isNaN(c.lon)) return;
 
-        // Determinar cor e espessura do vetor
-        let cor = '#94a3b8'; // Default neutro
-        let peso = Math.min(7, Math.max(2.5, Math.log10(Math.max(5, t.acidentes)) * 2));
-        let opacidade = 0.75;
+        let cor = '#2563eb';
+        let peso = 3.2;
+        let opacidade = 0.85;
 
-        if (layerModo === 'chuva' || t.chuva_sig) {
-            cor = '#0284c7';
-            opacidade = 0.9;
-        }
-        if (layerModo === 'feriado' || t.feriado_sig) {
-            cor = '#ea580c';
-            opacidade = 0.9;
-        }
-        if (t.acidentes >= 860 || layerModo === 'top50') {
-            cor = '#dc2626';
-            peso = Math.max(peso, 5);
-            opacidade = 0.95;
+        if (layerModo === 'todos') {
+            // Cor única e uniforme para todas as rodovias
+            cor = '#2563eb';
+            peso = 3.2;
+            opacidade = 0.85;
+        } else if (layerModo === 'chuva') {
+            if (t.chuva_sig) {
+                cor = '#0284c7';
+                peso = 4.2;
+                opacidade = 0.95;
+            } else {
+                cor = '#cbd5e1';
+                peso = 1.8;
+                opacidade = 0.45;
+            }
+        } else if (layerModo === 'feriado') {
+            if (t.feriado_sig) {
+                cor = '#ea580c';
+                peso = 4.2;
+                opacidade = 0.95;
+            } else {
+                cor = '#cbd5e1';
+                peso = 1.8;
+                opacidade = 0.45;
+            }
         }
 
         const pts = (c && c.pts && c.pts.length > 0) ? c.pts : (c.lat_ini ? [[c.lat_ini, c.lon_ini], [c.lat_fim, c.lon_fim]] : null);
@@ -364,6 +380,42 @@ function ajustarZoomMapaPorUf(uf) {
     } else {
         const bounds = UFS_BOUNDS[uf];
         appState.mapa.fitBounds(bounds, { padding: [20, 20], maxZoom: 8 });
+    }
+}
+
+function atualizarLegendaMapa(modo) {
+    const container = document.getElementById('conteudoLegendaMapa');
+    if (!container) return;
+
+    if (modo === 'todos') {
+        container.innerHTML = `
+            <div class="legend-item">
+                <div class="legend-line" style="background:#2563eb;"></div>
+                <span>Trecho monitorado</span>
+            </div>
+        `;
+    } else if (modo === 'chuva') {
+        container.innerHTML = `
+            <div class="legend-item">
+                <div class="legend-line" style="background:#0284c7;"></div>
+                <span>Sensibilidade à Chuva (p &lt; 0.05)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#cbd5e1;"></div>
+                <span>Sem sensibilidade direta</span>
+            </div>
+        `;
+    } else if (modo === 'feriado') {
+        container.innerHTML = `
+            <div class="legend-item">
+                <div class="legend-line" style="background:#ea580c;"></div>
+                <span>Sensibilidade a Feriados (p &lt; 0.05)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background:#cbd5e1;"></div>
+                <span>Sem sensibilidade direta</span>
+            </div>
+        `;
     }
 }
 
