@@ -957,9 +957,9 @@ function atualizarConteudoTabela() {
                 ${renderTh('order', 'Modelo')}
                 ${renderTh('mae', 'MAE', 'text-align:right;')}
                 ${renderTh('rmse', 'RMSE', 'text-align:right;')}
-                ${renderTh('beta_chuva', '&beta; Chuva (p-val)', 'text-align:right;')}
-                ${renderTh('beta_feriado', '&beta; Feriados (p-val)', 'text-align:right;')}
-                ${renderTh('ljung_box_p', 'Ljung-Box (p-val)', 'text-align:right;')}
+                ${renderTh('beta_chuva', '&beta; Chuva', 'text-align:right;')}
+                ${renderTh('beta_feriado', '&beta; Feriados', 'text-align:right;')}
+                ${renderTh('ljung_box_p', 'Ljung-Box', 'text-align:right;')}
                 <th>Ação</th>
             </tr>
         `;
@@ -1037,9 +1037,9 @@ function atualizarConteudoTabela() {
                 ${renderTh('order', 'Modelo')}
                 ${renderTh('mae', 'MAE', 'text-align:right;')}
                 ${renderTh('rmse', 'RMSE', 'text-align:right;')}
-                ${renderTh('beta_chuva', '&beta; Chuva (p-val)', 'text-align:right;')}
-                ${renderTh('beta_feriado', '&beta; Feriados (p-val)', 'text-align:right;')}
-                ${renderTh('ljung_box_p', 'Ljung-Box (p-val)', 'text-align:right;')}
+                ${renderTh('beta_chuva', '&beta; Chuva', 'text-align:right;')}
+                ${renderTh('beta_feriado', '&beta; Feriados', 'text-align:right;')}
+                ${renderTh('ljung_box_p', 'Ljung-Box', 'text-align:right;')}
                 <th>Ação</th>
             </tr>
         `;
