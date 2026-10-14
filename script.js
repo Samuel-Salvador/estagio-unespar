@@ -132,7 +132,7 @@ async function carregarDados() {
         if (window.DADOS_MESO_NACIONAL) {
             appState.dados = window.DADOS_MESO_NACIONAL;
         } else {
-            const resp = await fetch('dados_meso_nacional.json');
+            const resp = await fetch('data/dados_meso_nacional.json');
             appState.dados = await resp.json();
         }
 

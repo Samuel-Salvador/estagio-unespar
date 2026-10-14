@@ -11,7 +11,8 @@ import time
 from pathlib import Path
 
 DIR_ATUAL = Path(__file__).resolve().parent
-ARQ_BRASIL_GEO = DIR_ATUAL / "brasil_geo.js"
+DIR_DATA = DIR_ATUAL.parent / "data"
+ARQ_BRASIL_GEO = DIR_DATA / "brasil_geo.js"
 
 UFS = [
     'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',

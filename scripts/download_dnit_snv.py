@@ -11,7 +11,7 @@ import urllib.request
 import urllib.parse
 from pathlib import Path
 
-DIR_CACHE = Path(__file__).resolve().parent / "cache_dnit_snv"
+DIR_CACHE = Path(__file__).resolve().parent.parent / "cache_dnit_snv"
 DIR_CACHE.mkdir(exist_ok=True)
 
 UFS = [

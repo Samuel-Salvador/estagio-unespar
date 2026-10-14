@@ -12,8 +12,9 @@ import numpy as np
 import pandas as pd
 
 DIR_ATUAL = Path(__file__).resolve().parent
-DIR_CACHE = DIR_ATUAL / "cache_dnit_snv"
-DIR_TCC = DIR_ATUAL.parent / "TCC"
+DIR_PROJETO = DIR_ATUAL.parent
+DIR_CACHE = DIR_PROJETO / "cache_dnit_snv"
+DIR_TCC = DIR_PROJETO.parent / "TCC"
 CSV_RESULTADOS = DIR_TCC / "resultado_meso_todos_estados_20km.csv"
 
 def haversine_km(c1, c2):

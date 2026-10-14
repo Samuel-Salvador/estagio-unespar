@@ -15,11 +15,13 @@ from sqlalchemy import create_engine, text
 
 # Caminhos base
 DIR_ATUAL = Path(__file__).resolve().parent
-DIR_TCC = DIR_ATUAL.parent / "TCC"
+DIR_PROJETO = DIR_ATUAL.parent
+DIR_DATA = DIR_PROJETO / "data"
+DIR_TCC = DIR_PROJETO.parent / "TCC"
 CSV_RESULTADOS = DIR_TCC / "resultado_meso_todos_estados_20km.csv"
 MODELS_DIR = DIR_TCC / "models" / "meso"
-JSON_SAIDA = DIR_ATUAL / "dados_meso_nacional.json"
-JS_SAIDA = DIR_ATUAL / "dados_meso_nacional.js"
+JSON_SAIDA = DIR_DATA / "dados_meso_nacional.json"
+JS_SAIDA = DIR_DATA / "dados_meso_nacional.js"
 
 sys.path.append(str(DIR_TCC / "src"))
 from config import DB_URI
