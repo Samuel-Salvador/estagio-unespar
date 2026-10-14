@@ -355,6 +355,7 @@ for idx, (_, r) in enumerate(df_res.iterrows()):
         'beta_prolongado': round(float(r['beta_prolongado']), 5),
         'p_prolongado': p_prolongado_val,
         'prolongado_sig': bool(r['prolongado_significativo']),
+        'ljung_box_p': round(float(r['ljung_box_p_valor']), 4) if pd.notnull(r['ljung_box_p_valor']) else 0.0,
         'ruido_branco': bool(r['residuos_ruido_branco']),
         'coords': c,
         'baseline': baseline_7d

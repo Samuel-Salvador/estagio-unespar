@@ -778,7 +778,7 @@ function atualizarConteudoTabela() {
                 <th>UF</th>
                 <th>Região</th>
                 <th style="text-align:right;">Trechos (20 km)</th>
-                <th style="text-align:right;">Sinistros (5 Anos)</th>
+                <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade (%)</th>
                 <th style="text-align:right;">MAE (2024)</th>
                 <th style="text-align:right;">RMSE (2024)</th>
@@ -819,12 +819,13 @@ function atualizarConteudoTabela() {
                 <th>Macrorregião</th>
                 <th style="text-align:right;">UFs</th>
                 <th style="text-align:right;">Trechos (20 km)</th>
-                <th style="text-align:right;">Sinistros Totais</th>
+                <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade Média</th>
                 <th style="text-align:right;">MAE (2024)</th>
                 <th style="text-align:right;">RMSE (2024)</th>
                 <th style="text-align:right;">Ruído Branco (%)</th>
                 <th style="text-align:right;">Chuva Sig. (%)</th>
+                <th style="text-align:right;">Feriados Sig. (%)</th>
             </tr>
         `;
 
@@ -840,6 +841,7 @@ function atualizarConteudoTabela() {
                 <td style="text-align:right; font-family:monospace;">${r.rmse}</td>
                 <td style="text-align:right; color:var(--accent-success); font-weight:600;">${r.ruido_branco_pct}%</td>
                 <td style="text-align:right; color:var(--accent-rain); font-weight:600;">${r.chuva_sig_pct}%</td>
+                <td style="text-align:right; color:var(--accent-holiday); font-weight:600;">${r.feriado_sig_pct}%</td>
             `;
             tbody.appendChild(tr);
         });
@@ -851,18 +853,19 @@ function atualizarConteudoTabela() {
             lista = lista.filter(t => t.rodovia.toLowerCase().includes(busca) || t.uf.toLowerCase().includes(busca) || t.segmento.toLowerCase().includes(busca));
         }
 
-        infoEl.innerText = `Exibindo Top ${lista.length} segmentos mais críticos da malha federal brasileira`;
+        infoEl.innerText = `Exibindo Top ${lista.length} trechos mais críticos da malha federal brasileira`;
 
         thead.innerHTML = `
             <tr>
                 <th>#</th>
                 <th>Rodovia / UF</th>
-                <th>Segmento</th>
-                <th style="text-align:right;">Sinistros (5 Anos)</th>
+                <th>Trecho (km)</th>
+                <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade</th>
                 <th>SARIMAX</th>
                 <th style="text-align:right;">MAE</th>
                 <th style="text-align:right;">&beta; Chuva (p-val)</th>
+                <th style="text-align:right;">&beta; Feriados (p-val)</th>
                 <th style="text-align:right;">Ljung-Box (p-val)</th>
                 <th>Ação</th>
             </tr>
@@ -879,6 +882,7 @@ function atualizarConteudoTabela() {
                 <td><code style="font-size:0.75rem; background:#f1f5f9; padding:2px 4px; border-radius:4px;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${t.p_chuva < 0.001 ? t.p_chuva.toExponential(2) : t.p_chuva.toFixed(3)})</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${t.p_feriado < 0.001 ? t.p_feriado.toExponential(2) : t.p_feriado.toFixed(3)})</td>
                 <td style="text-align:right; font-family:monospace;">${t.ljung_box_p}</td>
                 <td>
                     <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
@@ -919,8 +923,9 @@ function atualizarConteudoTabela() {
                 <th>Modelo</th>
                 <th style="text-align:right;">MAE</th>
                 <th style="text-align:right;">RMSE</th>
-                <th>Chuva Sig.?</th>
-                <th>Feriados Sig.?</th>
+                <th style="text-align:right;">&beta; Chuva (p-val)</th>
+                <th style="text-align:right;">&beta; Feriados (p-val)</th>
+                <th style="text-align:right;">Ljung-Box (p-val)</th>
                 <th>Ação</th>
             </tr>
         `;
@@ -936,8 +941,9 @@ function atualizarConteudoTabela() {
                 <td><code style="font-size:0.75rem;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${t.rmse}</td>
-                <td><span class="table-badge ${t.chuva_sig ? 'badge-rain' : ''}">${t.chuva_sig ? 'Sim' : 'Não'}</span></td>
-                <td><span class="table-badge ${t.feriado_sig ? 'badge-holiday' : ''}">${t.feriado_sig ? 'Sim' : 'Não'}</span></td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${t.p_chuva < 0.001 ? t.p_chuva.toExponential(2) : t.p_chuva.toFixed(3)})</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${t.p_feriado < 0.001 ? t.p_feriado.toExponential(2) : t.p_feriado.toFixed(3)})</td>
+                <td style="text-align:right; font-family:monospace;">${t.ljung_box_p !== undefined ? t.ljung_box_p : (t.ruido_branco ? 0.05 : 0.0)}</td>
                 <td>
                     <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
                         Prever

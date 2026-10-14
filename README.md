@@ -15,9 +15,9 @@ Integra modelos estatísticos de previsão de séries temporais (**SARIMAX**) ao
 
 ### 2. Resultados & Mapa Interativo (Escala Meso)
 * **Sumário Executivo Nacional**: KPIs com 3.019 trechos modelados, 94,8% de esparsidade, 92,0% de ruído branco (Ljung-Box), 42,7% de sensibilidade à chuva e 12,2% a feriados.
-* **Mapa Rodoviário Interativo (Leaflet.js)**: Traçados vetoriais de todas as rodovias federais, com filtros para trechos afetados por chuva (azul), afetados por feriados (laranja) e top 50 segmentos mais perigosos (vermelho). Zoom inteligente por UF e popups detalhados.
+* **Mapa Rodoviário Interativo (Leaflet.js)**: Traçados vetoriais de todas as rodovias federais, com filtros para trechos afetados por chuva (azul), afetados por feriados (laranja) e top 50 trechos mais perigosos (vermelho). Zoom inteligente por UF e popups detalhados.
 * **Gráficos Dinâmicos (Chart.js)**: Comparativo das 27 UFs vs. Média Nacional e detalhamento ao selecionar um estado específico.
-* **Tabela de Dados Completa com Abas**: Navegação entre **27 Estados**, **5 Macrorregiões**, **Top 50 Segmentos Críticos** e **Todos os 3.019 Trechos**, com busca em tempo real e ordenação.
+* **Tabela de Dados Completa com Abas**: Navegação entre **27 Estados**, **5 Macrorregiões**, **Top 50 Trechos Críticos** e **Todos os 3.019 Trechos**, com busca em tempo real e ordenação.
 
 ### 3. Simulador de Previsão SARIMAX (Inferência Futura Real)
 * Permite selecionar qualquer trecho rodoviário das 27 UFs e simular a incidência de acidentes para os próximos 7 dias sob diferentes condições pluviométricas e de feriados.
