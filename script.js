@@ -752,6 +752,13 @@ function renderizarTabela() {
     atualizarConteudoTabela();
 }
 
+function formatarPValor(p, decimais = 4) {
+    if (p === undefined || p === null || isNaN(p)) return '-';
+    const num = Number(p);
+    if (num < 0.001) return num === 0 ? '0.000' : num.toExponential(2);
+    return num.toFixed(decimais);
+}
+
 function atualizarConteudoTabela() {
     const thead = document.getElementById('tabelaHead');
     const tbody = document.getElementById('tabelaBody');
@@ -881,9 +888,9 @@ function atualizarConteudoTabela() {
                 <td style="text-align:right;">${t.esparsidade}%</td>
                 <td><code style="font-size:0.75rem; background:#f1f5f9; padding:2px 4px; border-radius:4px;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${t.p_chuva < 0.001 ? t.p_chuva.toExponential(2) : t.p_chuva.toFixed(3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${t.p_feriado < 0.001 ? t.p_feriado.toExponential(2) : t.p_feriado.toFixed(3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.ljung_box_p}</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${formatarPValor(t.p_chuva, 3)})</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${formatarPValor(t.p_feriado, 3)})</td>
+                <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
                 <td>
                     <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
                         Prever
@@ -941,9 +948,9 @@ function atualizarConteudoTabela() {
                 <td><code style="font-size:0.75rem;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${t.rmse}</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${t.p_chuva < 0.001 ? t.p_chuva.toExponential(2) : t.p_chuva.toFixed(3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${t.p_feriado < 0.001 ? t.p_feriado.toExponential(2) : t.p_feriado.toFixed(3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.ljung_box_p !== undefined ? t.ljung_box_p : (t.ruido_branco ? 0.05 : 0.0)}</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${formatarPValor(t.p_chuva, 3)})</td>
+                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${formatarPValor(t.p_feriado, 3)})</td>
+                <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
                 <td>
                     <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
                         Prever

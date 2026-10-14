@@ -290,7 +290,7 @@ for pos, (_, r) in enumerate(df_top50.iterrows(), start=1):
         'beta_feriado': round(float(r['beta_feriado']), 4),
         'p_feriado': float(r['p_valor_feriado']) if pd.notnull(r['p_valor_feriado']) else 1.0,
         'feriado_sig': bool(r['feriado_significativo']),
-        'ljung_box_p': round(float(r['ljung_box_p_valor']), 4) if pd.notnull(r['ljung_box_p_valor']) else 0.0,
+        'ljung_box_p': float(r['ljung_box_p_valor']) if pd.notnull(r['ljung_box_p_valor']) else 0.0,
         'ruido_branco': bool(r['residuos_ruido_branco']),
         'coords': c
     })
@@ -355,7 +355,7 @@ for idx, (_, r) in enumerate(df_res.iterrows()):
         'beta_prolongado': round(float(r['beta_prolongado']), 5),
         'p_prolongado': p_prolongado_val,
         'prolongado_sig': bool(r['prolongado_significativo']),
-        'ljung_box_p': round(float(r['ljung_box_p_valor']), 4) if pd.notnull(r['ljung_box_p_valor']) else 0.0,
+        'ljung_box_p': float(r['ljung_box_p_valor']) if pd.notnull(r['ljung_box_p_valor']) else 0.0,
         'ruido_branco': bool(r['residuos_ruido_branco']),
         'coords': c,
         'baseline': baseline_7d
