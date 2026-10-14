@@ -970,8 +970,8 @@ function atualizarConteudoTabela() {
             const msgBr0 = 'Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados';
 
             const btnAcao = isBr0 ? `
-                <span class="tooltip-container tooltip-btn-disabled" title="${msgBr0}">
-                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled title="${msgBr0}">
+                <span class="tooltip-container tooltip-btn-disabled">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled>
                         Prever
                     </button>
                     <div class="tooltip-bubble">
@@ -1064,8 +1064,8 @@ function atualizarConteudoTabela() {
             const msgBr0 = 'Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados';
 
             const btnAcao = isBr0 ? `
-                <span class="tooltip-container tooltip-btn-disabled" title="${msgBr0}">
-                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled title="${msgBr0}">
+                <span class="tooltip-container tooltip-btn-disabled">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled>
                         Prever
                     </button>
                     <div class="tooltip-bubble">
