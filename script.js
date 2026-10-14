@@ -891,8 +891,7 @@ function atualizarConteudoTabela() {
 
     } else if (modo === 'todos') {
         paginacaoEl.style.display = 'flex';
-        // Omite trechos genéricos BR-0 da listagem da tabela
-        let lista = appState.dados.trechos.filter(t => !t.is_br0 && !t.ocultar_tabela);
+        let lista = appState.dados.trechos;
         if (busca) {
             lista = lista.filter(t => t.br.toLowerCase().includes(busca) || t.uf.toLowerCase().includes(busca) || (`km ${t.km_inicio}`).includes(busca));
         }
@@ -996,7 +995,7 @@ function atualizarRodoviasPrevisao() {
 
     const rodovias = [...new Set(
         appState.dados.trechos
-            .filter(t => t.uf === uf && !t.is_br0 && !t.ocultar_simulador)
+            .filter(t => t.uf === uf)
             .map(t => t.br)
     )].sort();
     rodovias.forEach(br => {
@@ -1016,7 +1015,7 @@ function atualizarTrechosPrevisao() {
     selectTrecho.innerHTML = '';
 
     const trechos = appState.dados.trechos
-        .filter(t => t.uf === uf && t.br === br && !t.is_br0 && !t.ocultar_simulador)
+        .filter(t => t.uf === uf && t.br === br)
         .sort((a, b) => b.acidentes - a.acidentes);
     trechos.forEach(t => {
         const opt = document.createElement('option');
@@ -1221,7 +1220,7 @@ function executarPrevisaoSARIMAX() {
 window.carregarTrechoNoSimulador = function(trechoId) {
     if (!appState.dados) return;
     const trecho = appState.dados.trechos.find(t => t.id === trechoId);
-    if (!trecho || trecho.is_br0 || trecho.ocultar_simulador) return;
+    if (!trecho) return;
 
     trocarAba('previsao');
 
