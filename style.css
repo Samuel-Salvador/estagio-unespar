@@ -493,55 +493,53 @@ main {
 .metrics-panel-header {
     padding-bottom: 0.65rem;
     border-bottom: 1px solid var(--border);
-}
-
-.metrics-panel-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-.metrics-panel-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--primary);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.metrics-panel-icon i,
-.metrics-panel-icon svg {
-    width: 16px;
-    height: 16px;
-}
-
-.metrics-panel-headings {
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    gap: 0.35rem;
 }
 
 .metrics-panel-title {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-heading);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.metrics-panel-subtitle {
-    font-size: 0.72rem;
+.metrics-panel-title i,
+.metrics-panel-title svg {
+    width: 17px;
+    height: 17px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.metrics-panel-region {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    line-height: 1.2;
+}
+
+.metrics-panel-region i,
+.metrics-panel-region svg {
+    width: 13px;
+    height: 13px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.metrics-panel-stats {
+    font-size: 0.74rem;
+    font-weight: 500;
     color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .metrics-panel-cards {

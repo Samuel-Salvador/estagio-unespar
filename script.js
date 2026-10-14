@@ -129,7 +129,8 @@ function atualizarCardsMetricasEstado(uf) {
     if (!meta || !estados) return;
 
     const tituloEl = document.getElementById('tituloMetricasEstado');
-    const subtituloEl = document.getElementById('subtituloMetricasEstado');
+    const regiaoEl = document.getElementById('regiaoMetricasEstado');
+    const statsEl = document.getElementById('statsMetricasEstado');
     const elEsparsidade = document.getElementById('kpiEsparsidade');
     const elRuido = document.getElementById('kpiRuido');
     const elChuva = document.getElementById('kpiChuva');
@@ -139,7 +140,8 @@ function atualizarCardsMetricasEstado(uf) {
 
     if (uf === 'TODAS' || !uf) {
         if (tituloEl) tituloEl.innerHTML = '<i data-lucide="bar-chart-2"></i> Métricas — Brasil Geral';
-        if (subtituloEl) subtituloEl.innerText = 'Consolidado Nacional (27 UFs)';
+        if (regiaoEl) regiaoEl.innerHTML = '<i data-lucide="map-pin"></i> <span>27 Unidades Federativas</span>';
+        if (statsEl) statsEl.innerText = `${meta.total_trechos.toLocaleString('pt-BR')} trechos | ${meta.total_sinistros.toLocaleString('pt-BR')} acidentes`;
 
         elEsparsidade.innerText = meta.esparsidade_global + '%';
         elRuido.innerText = meta.ruido_branco_global + '%';
@@ -148,8 +150,9 @@ function atualizarCardsMetricasEstado(uf) {
     } else {
         const est = estados.find(e => e.uf === uf);
         if (est) {
-            if (tituloEl) tituloEl.innerHTML = `<i data-lucide="map-pin"></i> Métricas — ${est.uf}`;
-            if (subtituloEl) subtituloEl.innerText = `Região ${est.regiao} (${est.trechos} trechos | ${est.sinistros.toLocaleString('pt-BR')} acidentes)`;
+            if (tituloEl) tituloEl.innerHTML = `<i data-lucide="bar-chart-2"></i> Métricas — ${est.uf}`;
+            if (regiaoEl) regiaoEl.innerHTML = `<i data-lucide="map-pin"></i> <span>Região ${est.regiao}</span>`;
+            if (statsEl) statsEl.innerText = `${est.trechos.toLocaleString('pt-BR')} trechos | ${est.sinistros.toLocaleString('pt-BR')} acidentes`;
 
             elEsparsidade.innerText = est.esparsidade + '%';
             elRuido.innerText = est.ruido_branco_pct + '%';
