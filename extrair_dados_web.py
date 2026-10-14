@@ -279,11 +279,17 @@ def haversine_km(lat1, lon1, lat2, lon2):
 br0_ocultados = 0
 for t in trechos_list:
     if t['br'] in ['BR-0', 'BR-00', 'BR-000'] or t['id'].startswith('BR0_'):
+        t['is_br0'] = True
         t['ocultar_mapa'] = True
+        t['ocultar_simulador'] = True
+        t['ocultar_tabela'] = True
         t['motivo_ocultacao'] = "Código genérico PRF (BR-0)"
         br0_ocultados += 1
     else:
+        t['is_br0'] = False
         t['ocultar_mapa'] = False
+        t['ocultar_simulador'] = False
+        t['ocultar_tabela'] = False
 
 pares_coincidentes = []
 for i in range(len(trechos_list)):

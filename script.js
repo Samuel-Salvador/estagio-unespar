@@ -760,7 +760,8 @@ function atualizarConteudoTabela() {
 
     } else if (modo === 'todos') {
         paginacaoEl.style.display = 'flex';
-        let lista = appState.dados.trechos;
+        // Omite trechos genéricos BR-0 da listagem da tabela
+        let lista = appState.dados.trechos.filter(t => !t.is_br0 && !t.ocultar_tabela);
         if (busca) {
             lista = lista.filter(t => t.br.toLowerCase().includes(busca) || t.uf.toLowerCase().includes(busca) || (`km ${t.km_inicio}`).includes(busca));
         }
@@ -862,7 +863,11 @@ function atualizarRodoviasPrevisao() {
     const selectBr = document.getElementById('prevRodovia');
     selectBr.innerHTML = '';
 
-    const rodovias = [...new Set(appState.dados.trechos.filter(t => t.uf === uf).map(t => t.br))].sort();
+    const rodovias = [...new Set(
+        appState.dados.trechos
+            .filter(t => t.uf === uf && !t.is_br0 && !t.ocultar_simulador)
+            .map(t => t.br)
+    )].sort();
     rodovias.forEach(br => {
         const opt = document.createElement('option');
         opt.value = br;
@@ -879,7 +884,9 @@ function atualizarTrechosPrevisao() {
     const selectTrecho = document.getElementById('prevTrecho');
     selectTrecho.innerHTML = '';
 
-    const trechos = appState.dados.trechos.filter(t => t.uf === uf && t.br === br).sort((a, b) => b.acidentes - a.acidentes);
+    const trechos = appState.dados.trechos
+        .filter(t => t.uf === uf && t.br === br && !t.is_br0 && !t.ocultar_simulador)
+        .sort((a, b) => b.acidentes - a.acidentes);
     trechos.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t.id;
@@ -1083,7 +1090,7 @@ function executarPrevisaoSARIMAX() {
 window.carregarTrechoNoSimulador = function(trechoId) {
     if (!appState.dados) return;
     const trecho = appState.dados.trechos.find(t => t.id === trechoId);
-    if (!trecho) return;
+    if (!trecho || trecho.is_br0 || trecho.ocultar_simulador) return;
 
     trocarAba('previsao');
 
