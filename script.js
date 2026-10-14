@@ -16,7 +16,12 @@ const appState = {
     ufSelecionada: 'TODAS',
     tabelaAtiva: 'ufs',   // 'ufs' | 'regioes' | 'top50' | 'todos'
     tabelaBusca: '',
-    tabelaOrdenacao: { coluna: 'sinistros', ordem: 'desc' },
+    ordenacaoPorTabela: {
+        ufs: { coluna: 'sinistros', ordem: 'desc' },
+        regioes: { coluna: 'sinistros', ordem: 'desc' },
+        top50: { coluna: 'posicao', ordem: 'asc' },
+        todos: { coluna: 'sinistros', ordem: 'desc' }
+    },
     tabelaPaginaAtual: 1,
     tabelaItensPorPagina: 50,
     chartChuva: null,
@@ -759,6 +764,58 @@ function formatarPValor(p, decimais = 4) {
     return num.toFixed(decimais);
 }
 
+function alternarOrdenacaoTabela(coluna) {
+    const modo = appState.tabelaAtiva;
+    if (!appState.ordenacaoPorTabela) {
+        appState.ordenacaoPorTabela = {};
+    }
+    if (!appState.ordenacaoPorTabela[modo]) {
+        appState.ordenacaoPorTabela[modo] = { coluna: '', ordem: 'desc' };
+    }
+    const atual = appState.ordenacaoPorTabela[modo];
+    if (atual.coluna === coluna) {
+        atual.ordem = (atual.ordem === 'asc' ? 'desc' : 'asc');
+    } else {
+        atual.coluna = coluna;
+        const colunasTexto = ['uf', 'regiao', 'rodovia', 'order'];
+        atual.ordem = colunasTexto.includes(coluna) ? 'asc' : 'desc';
+    }
+    if (modo === 'todos') {
+        appState.tabelaPaginaAtual = 1;
+    }
+    atualizarConteudoTabela();
+}
+window.alternarOrdenacaoTabela = alternarOrdenacaoTabela;
+
+function renderTh(coluna, label, estilo = '') {
+    const modo = appState.tabelaAtiva;
+    const ordenacao = (appState.ordenacaoPorTabela && appState.ordenacaoPorTabela[modo]) || { coluna: '', ordem: 'desc' };
+    const estaAtiva = (ordenacao.coluna === coluna);
+    const icone = estaAtiva ? (ordenacao.ordem === 'asc' ? '▲' : '▼') : '↕';
+    const classeAtiva = estaAtiva ? 'th-sorted' : '';
+    const labelLimpo = label.replace(/<[^>]*>?/gm, '').replace(/&[a-z]+;/g, '');
+    return `<th class="th-sortable ${classeAtiva}" style="${estilo}" onclick="alternarOrdenacaoTabela('${coluna}')" title="Clique para ordenar por ${labelLimpo}">
+        <span>${label}</span> <span class="sort-icon">${icone}</span>
+    </th>`;
+}
+
+function compararValores(a, b, ordem) {
+    if (a === b) return 0;
+    if (a === null || a === undefined || a === '') return 1;
+    if (b === null || b === undefined || b === '') return -1;
+
+    let res = 0;
+    const numA = typeof a === 'number' ? a : (typeof a === 'string' && a.trim() !== '' && !isNaN(Number(a)) ? Number(a) : NaN);
+    const numB = typeof b === 'number' ? b : (typeof b === 'string' && b.trim() !== '' && !isNaN(Number(b)) ? Number(b) : NaN);
+
+    if (!isNaN(numA) && !isNaN(numB)) {
+        res = numA - numB;
+    } else {
+        res = String(a).localeCompare(String(b), 'pt-BR', { sensitivity: 'base', numeric: true });
+    }
+    return ordem === 'desc' ? -res : res;
+}
+
 function atualizarConteudoTabela() {
     const thead = document.getElementById('tabelaHead');
     const tbody = document.getElementById('tabelaBody');
@@ -773,25 +830,30 @@ function atualizarConteudoTabela() {
 
     if (modo === 'ufs') {
         paginacaoEl.style.display = 'none';
-        let lista = appState.dados.estados;
+        let lista = [...appState.dados.estados];
         if (busca) {
             lista = lista.filter(e => e.uf.toLowerCase().includes(busca) || e.regiao.toLowerCase().includes(busca));
+        }
+
+        const ord = appState.ordenacaoPorTabela && appState.ordenacaoPorTabela.ufs;
+        if (ord && ord.coluna) {
+            lista.sort((a, b) => compararValores(a[ord.coluna], b[ord.coluna], ord.ordem));
         }
 
         infoEl.innerText = `Exibindo ${lista.length} de 27 Unidades Federativas`;
 
         thead.innerHTML = `
             <tr>
-                <th>UF</th>
-                <th>Região</th>
-                <th style="text-align:right;">Trechos (20 km)</th>
-                <th style="text-align:right;">Sinistros</th>
-                <th style="text-align:right;">Esparsidade (%)</th>
-                <th style="text-align:right;">MAE</th>
-                <th style="text-align:right;">RMSE</th>
-                <th style="text-align:right;">Ruído Branco (%)</th>
-                <th style="text-align:right;">Chuva Sig. (%)</th>
-                <th style="text-align:right;">Feriados Sig. (%)</th>
+                ${renderTh('uf', 'UF')}
+                ${renderTh('regiao', 'Região')}
+                ${renderTh('trechos', 'Trechos (20 km)', 'text-align:right;')}
+                ${renderTh('sinistros', 'Sinistros', 'text-align:right;')}
+                ${renderTh('esparsidade', 'Esparsidade (%)', 'text-align:right;')}
+                ${renderTh('mae', 'MAE', 'text-align:right;')}
+                ${renderTh('rmse', 'RMSE', 'text-align:right;')}
+                ${renderTh('ruido_branco_pct', 'Ruído Branco (%)', 'text-align:right;')}
+                ${renderTh('chuva_sig_pct', 'Chuva Sig. (%)', 'text-align:right;')}
+                ${renderTh('feriado_sig_pct', 'Feriados Sig. (%)', 'text-align:right;')}
             </tr>
         `;
 
@@ -814,25 +876,30 @@ function atualizarConteudoTabela() {
 
     } else if (modo === 'regioes') {
         paginacaoEl.style.display = 'none';
-        let lista = appState.dados.macrorregioes;
+        let lista = [...appState.dados.macrorregioes];
         if (busca) {
             lista = lista.filter(r => r.regiao.toLowerCase().includes(busca));
+        }
+
+        const ord = appState.ordenacaoPorTabela && appState.ordenacaoPorTabela.regioes;
+        if (ord && ord.coluna) {
+            lista.sort((a, b) => compararValores(a[ord.coluna], b[ord.coluna], ord.ordem));
         }
 
         infoEl.innerText = `Exibindo ${lista.length} macrorregiões do Brasil`;
 
         thead.innerHTML = `
             <tr>
-                <th>Macrorregião</th>
-                <th style="text-align:right;">UFs</th>
-                <th style="text-align:right;">Trechos (20 km)</th>
-                <th style="text-align:right;">Sinistros</th>
-                <th style="text-align:right;">Esparsidade Média</th>
-                <th style="text-align:right;">MAE</th>
-                <th style="text-align:right;">RMSE</th>
-                <th style="text-align:right;">Ruído Branco (%)</th>
-                <th style="text-align:right;">Chuva Sig. (%)</th>
-                <th style="text-align:right;">Feriados Sig. (%)</th>
+                ${renderTh('regiao', 'Macrorregião')}
+                ${renderTh('ufs_count', 'UFs', 'text-align:right;')}
+                ${renderTh('trechos', 'Trechos (20 km)', 'text-align:right;')}
+                ${renderTh('sinistros', 'Sinistros', 'text-align:right;')}
+                ${renderTh('esparsidade', 'Esparsidade Média', 'text-align:right;')}
+                ${renderTh('mae', 'MAE', 'text-align:right;')}
+                ${renderTh('rmse', 'RMSE', 'text-align:right;')}
+                ${renderTh('ruido_branco_pct', 'Ruído Branco (%)', 'text-align:right;')}
+                ${renderTh('chuva_sig_pct', 'Chuva Sig. (%)', 'text-align:right;')}
+                ${renderTh('feriado_sig_pct', 'Feriados Sig. (%)', 'text-align:right;')}
             </tr>
         `;
 
@@ -855,26 +922,44 @@ function atualizarConteudoTabela() {
 
     } else if (modo === 'top50') {
         paginacaoEl.style.display = 'none';
-        let lista = appState.dados.top50;
+        let lista = [...appState.dados.top50];
         if (busca) {
             lista = lista.filter(t => t.rodovia.toLowerCase().includes(busca) || t.uf.toLowerCase().includes(busca) || t.segmento.toLowerCase().includes(busca));
+        }
+
+        const ord = appState.ordenacaoPorTabela && appState.ordenacaoPorTabela.top50;
+        if (ord && ord.coluna) {
+            lista.sort((a, b) => {
+                let valA, valB;
+                if (ord.coluna === 'rodovia') {
+                    valA = `${a.rodovia} ${a.uf}`;
+                    valB = `${b.rodovia} ${b.uf}`;
+                } else if (ord.coluna === 'segmento') {
+                    valA = parseInt(a.segmento.replace(/\D+/g, '')) || 0;
+                    valB = parseInt(b.segmento.replace(/\D+/g, '')) || 0;
+                } else {
+                    valA = a[ord.coluna];
+                    valB = b[ord.coluna];
+                }
+                return compararValores(valA, valB, ord.ordem);
+            });
         }
 
         infoEl.innerText = `Exibindo Top ${lista.length} trechos mais críticos da malha federal brasileira`;
 
         thead.innerHTML = `
             <tr>
-                <th>#</th>
-                <th>Rodovia / UF</th>
-                <th>Trecho (km)</th>
-                <th style="text-align:right;">Sinistros</th>
-                <th style="text-align:right;">Esparsidade</th>
-                <th>Modelo</th>
-                <th style="text-align:right;">MAE</th>
-                <th style="text-align:right;">RMSE</th>
-                <th style="text-align:right;">&beta; Chuva (p-val)</th>
-                <th style="text-align:right;">&beta; Feriados (p-val)</th>
-                <th style="text-align:right;">Ljung-Box (p-val)</th>
+                ${renderTh('posicao', '#')}
+                ${renderTh('rodovia', 'Rodovia / UF')}
+                ${renderTh('segmento', 'Trecho (km)')}
+                ${renderTh('sinistros', 'Sinistros', 'text-align:right;')}
+                ${renderTh('esparsidade', 'Esparsidade', 'text-align:right;')}
+                ${renderTh('order', 'Modelo')}
+                ${renderTh('mae', 'MAE', 'text-align:right;')}
+                ${renderTh('rmse', 'RMSE', 'text-align:right;')}
+                ${renderTh('beta_chuva', '&beta; Chuva (p-val)', 'text-align:right;')}
+                ${renderTh('beta_feriado', '&beta; Feriados (p-val)', 'text-align:right;')}
+                ${renderTh('ljung_box_p', 'Ljung-Box (p-val)', 'text-align:right;')}
                 <th>Ação</th>
             </tr>
         `;
@@ -904,9 +989,30 @@ function atualizarConteudoTabela() {
 
     } else if (modo === 'todos') {
         paginacaoEl.style.display = 'flex';
-        let lista = appState.dados.trechos;
+        let lista = [...appState.dados.trechos];
         if (busca) {
             lista = lista.filter(t => t.br.toLowerCase().includes(busca) || t.uf.toLowerCase().includes(busca) || (`km ${t.km_inicio}`).includes(busca));
+        }
+
+        const ord = appState.ordenacaoPorTabela && appState.ordenacaoPorTabela.todos;
+        if (ord && ord.coluna) {
+            lista.sort((a, b) => {
+                let valA, valB;
+                if (ord.coluna === 'rodovia') {
+                    valA = `${a.br} ${a.uf}`;
+                    valB = `${b.br} ${b.uf}`;
+                } else if (ord.coluna === 'sinistros') {
+                    valA = a.acidentes;
+                    valB = b.acidentes;
+                } else if (ord.coluna === 'km_inicio') {
+                    valA = a.km_inicio;
+                    valB = b.km_inicio;
+                } else {
+                    valA = a[ord.coluna];
+                    valB = b[ord.coluna];
+                }
+                return compararValores(valA, valB, ord.ordem);
+            });
         }
 
         const totalItens = lista.length;
@@ -924,16 +1030,16 @@ function atualizarConteudoTabela() {
 
         thead.innerHTML = `
             <tr>
-                <th>Rodovia / UF</th>
-                <th>Trecho (km)</th>
-                <th style="text-align:right;">Sinistros</th>
-                <th style="text-align:right;">Esparsidade</th>
-                <th>Modelo</th>
-                <th style="text-align:right;">MAE</th>
-                <th style="text-align:right;">RMSE</th>
-                <th style="text-align:right;">&beta; Chuva (p-val)</th>
-                <th style="text-align:right;">&beta; Feriados (p-val)</th>
-                <th style="text-align:right;">Ljung-Box (p-val)</th>
+                ${renderTh('rodovia', 'Rodovia / UF')}
+                ${renderTh('km_inicio', 'Trecho (km)')}
+                ${renderTh('sinistros', 'Sinistros', 'text-align:right;')}
+                ${renderTh('esparsidade', 'Esparsidade', 'text-align:right;')}
+                ${renderTh('order', 'Modelo')}
+                ${renderTh('mae', 'MAE', 'text-align:right;')}
+                ${renderTh('rmse', 'RMSE', 'text-align:right;')}
+                ${renderTh('beta_chuva', '&beta; Chuva (p-val)', 'text-align:right;')}
+                ${renderTh('beta_feriado', '&beta; Feriados (p-val)', 'text-align:right;')}
+                ${renderTh('ljung_box_p', 'Ljung-Box (p-val)', 'text-align:right;')}
                 <th>Ação</th>
             </tr>
         `;
