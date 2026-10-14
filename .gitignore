@@ -1,0 +1,9 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# DNIT SNV Cache (usado apenas no pipeline de extração offline)
+cache_dnit_snv/
+
+# Testes temporários
+test_pipeline_reconstrucao.py

@@ -41,7 +41,9 @@ if JSON_SAIDA.exists():
     except Exception as e:
         print(f"       -> Aviso: não foi possível ler cache existente: {e}")
 
-print("[2/5] Consultando e reconstruindo o traçado curvilíneo real no PostgreSQL...")
+from processar_geometrias_snv import SNVIndex, haversine_km, rdp_simplify, normalizar_br
+
+print("[2/5] Reconstruindo traçados curvilíneos reais via DNIT SNV e fallback topológico...")
 engine = create_engine(DB_URI)
 query_coords = """
     SELECT 
@@ -60,47 +62,122 @@ query_coords = """
 t0 = time.time()
 with engine.connect() as conn:
     df_prf = pd.read_sql(text(query_coords), conn)
-print(f"       -> {len(df_prf):,} sinistros carregados em {time.time() - t0:.2f}s.")
+print(f"       -> {len(df_prf):,} sinistros carregados da PRF em {time.time() - t0:.2f}s.")
 
-# Subdivisão em blocos de 2 km ao longo da rodovia
-df_prf['km_sub'] = np.floor(df_prf['km_real'] / 2.0) * 2.0
+# Indexação rápida dos acidentes da PRF
+df_prf['br_clean'] = df_prf['br'].apply(normalizar_br)
+prf_groups = {(uf, br, km): grp for (uf, br, km), grp in df_prf.groupby(['uf', 'br_clean', 'km_inicio'])}
 
-# Filtro de robustez espacial contra erros de digitação de km no boletim da PRF
-# Calcula a mediana espacial de cada trecho de 20 km
-meds = df_prf.groupby(['uf', 'br', 'km_inicio'])[['lat', 'lon']].transform('median')
-dist_mediana = np.sqrt((df_prf['lat'] - meds['lat'])**2 + (df_prf['lon'] - meds['lon'])**2)
-df_clean = df_prf[dist_mediana < 0.25] # tolerância de ~25 km ao redor do centro do trecho
+# Inicializa índice do DNIT SNV
+DIR_CACHE_SNV = DIR_ATUAL / "cache_dnit_snv"
+snv = SNVIndex(DIR_CACHE_SNV)
 
-print(f"       -> {len(df_clean):,} registros válidos após filtro espacial. Gerando polylines...")
-
-# Agrupamento por sub-ponto de 2 km ordenado
-df_subpts = df_clean.groupby(['uf', 'br', 'km_inicio', 'km_sub']).agg(
-    lat=('lat', 'median'),
-    lon=('lon', 'median')
-).reset_index().sort_values(by=['uf', 'br', 'km_inicio', 'km_sub'])
-
-# Centróide geral do trecho
-trechos_centros = df_clean.groupby(['uf', 'br', 'km_inicio']).agg(
-    lat_avg=('lat', 'mean'),
-    lon_avg=('lon', 'mean')
-).reset_index()
+def fallback_topologico_prf(sub_acidentes):
+    """
+    Quando o SNV não cobre o trecho, gera polilinha monotônica
+    projetada ao longo do eixo principal de dispersão (PCA) com remoção de reversões.
+    """
+    if sub_acidentes is None or len(sub_acidentes) == 0:
+        return None
+    pts = sub_acidentes[['lat', 'lon']].values
+    if len(pts) < 2:
+        return [[round(float(pts[0][0]), 5), round(float(pts[0][1]), 5)]]
+        
+    med = np.median(pts, axis=0)
+    dists = np.sqrt((pts[:, 0] - med[0])**2 + (pts[:, 1] - med[1])**2)
+    valid_pts = pts[dists < 0.12] # tolerância de ~12 km
+    if len(valid_pts) < 2:
+        valid_pts = pts
+        
+    coords_centered = valid_pts - np.mean(valid_pts, axis=0)
+    cov = np.cov(coords_centered, rowvar=False)
+    if cov.shape == (2, 2):
+        evals, evecs = np.linalg.eigh(cov)
+        principal_axis = evecs[:, np.argmax(evals)]
+        scores = np.dot(coords_centered, principal_axis)
+        sorted_indices = np.argsort(scores)
+        ordered_pts = valid_pts[sorted_indices]
+    else:
+        ordered_pts = valid_pts
+        
+    n_bins = min(10, len(ordered_pts))
+    bins = np.array_split(ordered_pts, n_bins)
+    smooth_pts = []
+    for b in bins:
+        if len(b) > 0:
+            m = np.median(b, axis=0)
+            smooth_pts.append([round(float(m[0]), 5), round(float(m[1]), 5)])
+            
+    filtered = [smooth_pts[0]]
+    for i in range(1, len(smooth_pts)):
+        p_curr = smooth_pts[i]
+        if i >= 2:
+            v1 = np.array(filtered[-1]) - np.array(filtered[-2])
+            v2 = np.array(p_curr) - np.array(filtered[-1])
+            len1 = np.linalg.norm(v1)
+            len2 = np.linalg.norm(v2)
+            if len1 > 0.001 and len2 > 0.001:
+                cos_ang = np.dot(v1, v2) / (len1 * len2)
+                if cos_ang < -0.2:
+                    continue
+        filtered.append(p_curr)
+    return filtered
 
 coords_map = {}
-for _, r in trechos_centros.iterrows():
-    chave = f"{str(r['br']).strip().upper()}_{str(r['uf']).strip().upper()}_{float(r['km_inicio'])}"
-    sub = df_subpts[(df_subpts['uf'] == r['uf']) & (df_subpts['br'] == r['br']) & (df_subpts['km_inicio'] == r['km_inicio'])]
+origens_stats = {'DNIT_SNV': 0, 'PRF_TOPOLOGICO': 0, 'CENTRO_DF': 0}
+
+for _, r in df_res.iterrows():
+    br_clean = normalizar_br(r['rodovia'])
+    uf_clean = str(r['uf']).strip().upper()
+    km_ini = float(r['km_inicio'])
+    km_fim = float(r['km_fim'])
+    chave = f"{br_clean.upper()}_{uf_clean}_{km_ini}"
     
-    pts = [[round(float(p.lat), 5), round(float(p.lon), 5)] for _, p in sub.iterrows()]
-    if len(pts) == 0:
-        pts = [[round(float(r['lat_avg']), 5), round(float(r['lon_avg']), 5)]]
+    # 1. Tenta fatiar da malha oficial do DNIT SNV
+    pts_snv = snv.fatiar_trecho(br_clean, uf_clean, km_ini, km_fim)
+    sub_prf = prf_groups.get((uf_clean, br_clean, km_ini))
+    
+    usar_snv = False
+    if pts_snv and len(pts_snv) >= 2:
+        c_snv = np.mean(pts_snv, axis=0)
+        if sub_prf is not None and len(sub_prf) > 0:
+            med_prf = [sub_prf['lat'].median(), sub_prf['lon'].median()]
+            d_centro = haversine_km([c_snv[1], c_snv[0]], [med_prf[1], med_prf[0]])
+            if d_centro < 35.0:
+                usar_snv = True
+            else:
+                usar_snv = False
+        else:
+            usar_snv = True
+            
+    if usar_snv:
+        coords_map[chave] = {
+            'lat': round(float(np.mean([p[0] for p in pts_snv])), 5),
+            'lon': round(float(np.mean([p[1] for p in pts_snv])), 5),
+            'pts': pts_snv,
+            'origem': 'DNIT_SNV'
+        }
+        origens_stats['DNIT_SNV'] += 1
+    else:
+        pts_fallback = fallback_topologico_prf(sub_prf)
+        if pts_fallback and len(pts_fallback) > 0:
+            coords_map[chave] = {
+                'lat': round(float(np.mean([p[0] for p in pts_fallback])), 5),
+                'lon': round(float(np.mean([p[1] for p in pts_fallback])), 5),
+                'pts': pts_fallback,
+                'origem': 'PRF_TOPOLOGICO'
+            }
+            origens_stats['PRF_TOPOLOGICO'] += 1
+        else:
+            coords_map[chave] = {
+                'lat': -15.78, 'lon': -47.92,
+                'pts': [[-15.78, -47.92]],
+                'origem': 'CENTRO_DF'
+            }
+            origens_stats['CENTRO_DF'] += 1
 
-    coords_map[chave] = {
-        'lat': round(float(r['lat_avg']), 5),
-        'lon': round(float(r['lon_avg']), 5),
-        'pts': pts
-    }
-
-print(f"       -> {len(coords_map)} trechos com traçado curvo poli-linhal concluído.")
+print(f"       -> {origens_stats['DNIT_SNV']:,} trechos gerados via DNIT SNV oficial ({origens_stats['DNIT_SNV']/len(df_res)*100:.1f}%).")
+print(f"       -> {origens_stats['PRF_TOPOLOGICO']:,} trechos gerados via Fallback Topológico Monotônico.")
 
 print("[3/5] Compilando métricas agregadas por Estado e Macrorregião...")
 estados_list = []
@@ -269,15 +346,9 @@ print(f"       -> {len(trechos_list)} trechos processados com sucesso.")
 # -------------------------------------------------------------------------
 # [4.1/5] Tratamento Cartográfico: Deduplicação de Trechos Coincidentes e BR-0
 # -------------------------------------------------------------------------
-def haversine_km(lat1, lon1, lat2, lon2):
-    R = 6371.0
-    dlat = np.radians(lat2 - lat1)
-    dlon = np.radians(lon2 - lon1)
-    a = np.sin(dlat / 2)**2 + np.cos(np.radians(lat1)) * np.cos(np.radians(lat2)) * np.sin(dlon / 2)**2
-    return 2 * R * np.arcsin(np.sqrt(a))
-
 br0_ocultados = 0
 for t in trechos_list:
+    t['trechos_unificados'] = []
     if t['br'] in ['BR-0', 'BR-00', 'BR-000'] or t['id'].startswith('BR0_'):
         t['is_br0'] = True
         t['ocultar_mapa'] = True
@@ -291,6 +362,55 @@ for t in trechos_list:
         t['ocultar_simulador'] = False
         t['ocultar_tabela'] = False
 
+# 1. Deduplicação de trechos da MESMA rodovia sobrepostos no mesmo espaço físico (< 3.5 km)
+mesma_rodovia_ocultados = 0
+by_road = {}
+for t in trechos_list:
+    if t['ocultar_mapa']:
+        continue
+    by_road.setdefault((t['uf'], t['br']), []).append(t)
+
+for (uf, br), group in by_road.items():
+    if len(group) < 2:
+        continue
+    for i in range(len(group)):
+        t1 = group[i]
+        if t1['ocultar_mapa']:
+            continue
+        c1 = t1.get('coords', {})
+        lat1, lon1 = c1.get('lat'), c1.get('lon')
+        if lat1 is None or (lat1 == -15.78 and lon1 == -47.92):
+            continue
+        for j in range(i + 1, len(group)):
+            t2 = group[j]
+            if t2['ocultar_mapa']:
+                continue
+            c2 = t2.get('coords', {})
+            lat2, lon2 = c2.get('lat'), c2.get('lon')
+            if lat2 is None or (lat2 == -15.78 and lon2 == -47.92):
+                continue
+            
+            dist = haversine_km([lon1, lat1], [lon2, lat2])
+            if dist < 3.5 and abs(t1['km_inicio'] - t2['km_inicio']) >= 20:
+                if t1['acidentes'] >= t2['acidentes']:
+                    manter, ocultar = t1, t2
+                else:
+                    manter, ocultar = t2, t1
+                
+                if not ocultar.get('ocultar_mapa'):
+                    ocultar['ocultar_mapa'] = True
+                    ocultar['sobreposto_com'] = manter['id']
+                    ocultar['motivo_ocultacao'] = f"Sobreposto fisicamente com {manter['br']} km {manter['km_inicio']}–{manter['km_fim']} (distância: {dist:.2f} km)"
+                    manter['trechos_unificados'].append({
+                        'id': ocultar['id'],
+                        'km_inicio': ocultar['km_inicio'],
+                        'km_fim': ocultar['km_fim'],
+                        'acidentes': ocultar['acidentes']
+                    })
+                    mesma_rodovia_ocultados += 1
+
+# 2. Deduplicação de rodovias DIFERENTES coincidentes (< 2.0 km)
+coincidentes_ocultados = 0
 pares_coincidentes = []
 for i in range(len(trechos_list)):
     t1 = trechos_list[i]
@@ -304,20 +424,17 @@ for i in range(len(trechos_list)):
         t2 = trechos_list[j]
         if t2['ocultar_mapa']:
             continue
-        if t1['uf'] != t2['uf']:
-            continue
-        if t1['br'] == t2['br']:
+        if t1['uf'] != t2['uf'] or t1['br'] == t2['br']:
             continue
         c2 = t2.get('coords', {})
         lat2, lon2 = c2.get('lat'), c2.get('lon')
         if lat2 is None or (lat2 == -15.78 and lon2 == -47.92):
             continue
         
-        dist = haversine_km(lat1, lon1, lat2, lon2)
+        dist = haversine_km([lon1, lat1], [lon2, lat2])
         if dist < 2.0:
             pares_coincidentes.append((dist, t1, t2))
 
-coincidentes_ocultados = 0
 for dist, t1, t2 in sorted(pares_coincidentes, key=lambda x: x[0]):
     if t1.get('ocultar_mapa') and t2.get('ocultar_mapa'):
         continue
@@ -333,8 +450,9 @@ for dist, t1, t2 in sorted(pares_coincidentes, key=lambda x: x[0]):
         ocultar['motivo_ocultacao'] = f"Sobreposto fisicamente com {manter['br']} (distância: {dist:.2f} km)"
         coincidentes_ocultados += 1
 
-print(f"       -> [Filtro Cartográfico] {br0_ocultados} trechos BR-0 e {coincidentes_ocultados} trechos coincidentes marcados com ocultar_mapa: True.")
-print(f"       -> {len(trechos_list) - (br0_ocultados + coincidentes_ocultados)} trechos visíveis no mapa vetorial.")
+print(f"       -> [Filtro Cartográfico] {br0_ocultados} trechos BR-0, {mesma_rodovia_ocultados} duplicatas da mesma rodovia e {coincidentes_ocultados} trechos coincidentes marcados com ocultar_mapa: True.")
+visiveis_mapa = len([t for t in trechos_list if not t.get('ocultar_mapa')])
+print(f"       -> {visiveis_mapa} trechos únicos visíveis no mapa vetorial (de {len(trechos_list)} totais).")
 
 dados_finais = {
     'metadata': {

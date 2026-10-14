@@ -334,9 +334,21 @@ function atualizarCamadaMapa() {
                     <p><span>Ruído Branco:</span> <strong>${t.ruido_branco ? 'Sim (p > 0.05)' : 'Não'}</strong></p>
                     <p><span>&beta; Chuva:</span> <strong>${t.beta_chuva} (${t.chuva_sig ? 'Sig. p < 0.05' : 'Não sig.'})</strong></p>
                     <p><span>&beta; Feriados:</span> <strong>${t.beta_feriado} (${t.feriado_sig ? 'Sig. p < 0.05' : 'Não sig.'})</strong></p>
+                    ${t.trechos_unificados && t.trechos_unificados.length > 0 ? `
+                        <div style="margin: 8px 0 4px 0; padding: 6px 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; font-size: 0.75rem; color: #1e40af;">
+                            <div style="font-weight:600; margin-bottom:2px;">📍 Trecho Físico Unificado no Mapa:</div>
+                            <div style="font-size:0.7rem; color:#3b82f6; margin-bottom:4px;">Abrange dados sobrepostos de outros modelos da rodovia:</div>
+                            ${t.trechos_unificados.map(u => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:3px; padding-top:2px; border-top:1px dashed #dbeafe;">
+                                    <span>km ${u.km_inicio}–${u.km_fim} (${u.acidentes} acidentes)</span>
+                                    <button style="padding:1px 6px; font-size:0.68rem; border-radius:3px; background:#2563eb; color:#fff; border:none; cursor:pointer;" onclick="carregarTrechoNoSimulador('${u.id}')">Simular</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
                 </div>
                 <button class="btn-popup-action" onclick="carregarTrechoNoSimulador('${t.id}')">
-                    Simular Previsão Neste Trecho ➔
+                    Simular Previsão Principal ➔
                 </button>
             </div>
         `;
