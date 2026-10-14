@@ -972,14 +972,14 @@ function atualizarConteudoTabela() {
                 <td>${t.segmento}</td>
                 <td style="text-align:right; font-weight:700; color:var(--accent-danger);">${t.sinistros.toLocaleString('pt-BR')}</td>
                 <td style="text-align:right;">${t.esparsidade}%</td>
-                <td><code style="font-size:0.75rem; background:#f1f5f9; padding:2px 4px; border-radius:4px;">${t.order}</code></td>
+                <td><code style="font-size:0.7rem; background:#f1f5f9; padding:1px 3px; border-radius:3px;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${t.rmse}</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${formatarPValor(t.p_chuva, 3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${formatarPValor(t.p_feriado, 3)})</td>
+                <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_chuva} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_chuva, 3)})</span></td>
+                <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_feriado} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_feriado, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
                 <td>
-                    <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
                         Prever
                     </button>
                 </td>
@@ -1051,14 +1051,14 @@ function atualizarConteudoTabela() {
                 <td>km ${t.km_inicio}–${t.km_fim}</td>
                 <td style="text-align:right; font-weight:700; color:var(--accent-danger);">${t.acidentes.toLocaleString('pt-BR')}</td>
                 <td style="text-align:right;">${t.esparsidade}%</td>
-                <td><code style="font-size:0.75rem;">${t.order}</code></td>
+                <td><code style="font-size:0.7rem; background:#f1f5f9; padding:1px 3px; border-radius:3px;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${t.rmse}</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${formatarPValor(t.p_chuva, 3)})</td>
-                <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${formatarPValor(t.p_feriado, 3)})</td>
+                <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_chuva} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_chuva, 3)})</span></td>
+                <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_feriado} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_feriado, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
                 <td>
-                    <button class="btn-page" style="padding:0.2rem 0.5rem; font-size:0.75rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
                         Prever
                     </button>
                 </td>

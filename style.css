@@ -888,7 +888,7 @@ main {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem 1rem;
     box-shadow: var(--shadow-sm);
     margin-bottom: 2rem;
 }
@@ -972,7 +972,7 @@ main {
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     text-align: left;
 }
 
@@ -980,7 +980,8 @@ main {
     background-color: #f8fafc;
     color: var(--text-heading);
     font-weight: 600;
-    padding: 0.85rem 1rem;
+    font-size: 0.75rem;
+    padding: 0.55rem 0.5rem;
     border-bottom: 2px solid var(--border);
     position: sticky;
     top: 0;
@@ -1006,8 +1007,8 @@ main {
 
 .sort-icon {
     display: inline-block;
-    margin-left: 5px;
-    font-size: 0.72rem;
+    margin-left: 3px;
+    font-size: 0.65rem;
     color: #94a3b8;
     vertical-align: middle;
 }
@@ -1018,10 +1019,11 @@ main {
 }
 
 .data-table td {
-    padding: 0.75rem 1rem;
+    padding: 0.45rem 0.5rem;
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-main);
     white-space: nowrap;
+    font-size: 0.78rem;
 }
 
 .data-table tbody tr:hover {
@@ -1029,9 +1031,9 @@ main {
 }
 
 .table-badge {
-    padding: 0.2rem 0.55rem;
+    padding: 0.15rem 0.4rem;
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     font-weight: 600;
     display: inline-block;
 }
