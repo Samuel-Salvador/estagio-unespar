@@ -801,7 +801,7 @@ function atualizarConteudoTabela() {
                 <td><span class="table-badge badge-uf">${e.uf}</span></td>
                 <td>${e.regiao}</td>
                 <td style="text-align:right; font-weight:600;">${e.trechos}</td>
-                <td style="text-align:right; font-weight:700; color:var(--text-heading);">${e.sinistros.toLocaleString('pt-BR')}</td>
+                <td style="text-align:right; font-weight:700; color:var(--accent-danger);">${e.sinistros.toLocaleString('pt-BR')}</td>
                 <td style="text-align:right;">${e.esparsidade}%</td>
                 <td style="text-align:right; font-family:monospace;">${e.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${e.rmse}</td>
@@ -842,7 +842,7 @@ function atualizarConteudoTabela() {
                 <td><strong>${r.regiao}</strong></td>
                 <td style="text-align:right;">${r.ufs_count}</td>
                 <td style="text-align:right; font-weight:600;">${r.trechos}</td>
-                <td style="text-align:right; font-weight:700;">${r.sinistros.toLocaleString('pt-BR')}</td>
+                <td style="text-align:right; font-weight:700; color:var(--accent-danger);">${r.sinistros.toLocaleString('pt-BR')}</td>
                 <td style="text-align:right;">${r.esparsidade}%</td>
                 <td style="text-align:right; font-family:monospace;">${r.mae}</td>
                 <td style="text-align:right; font-family:monospace;">${r.rmse}</td>
@@ -924,8 +924,7 @@ function atualizarConteudoTabela() {
 
         thead.innerHTML = `
             <tr>
-                <th>Rodovia</th>
-                <th>UF</th>
+                <th>Rodovia / UF</th>
                 <th>Trecho (km)</th>
                 <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade</th>
@@ -942,10 +941,9 @@ function atualizarConteudoTabela() {
         paginaItens.forEach(t => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${t.br}</strong></td>
-                <td><span class="table-badge badge-uf">${t.uf}</span></td>
+                <td><strong>${t.br}</strong> / <span class="table-badge badge-uf">${t.uf}</span></td>
                 <td>km ${t.km_inicio}–${t.km_fim}</td>
-                <td style="text-align:right; font-weight:700;">${t.acidentes.toLocaleString('pt-BR')}</td>
+                <td style="text-align:right; font-weight:700; color:var(--accent-danger);">${t.acidentes.toLocaleString('pt-BR')}</td>
                 <td style="text-align:right;">${t.esparsidade}%</td>
                 <td><code style="font-size:0.75rem;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
