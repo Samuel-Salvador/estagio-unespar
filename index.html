@@ -154,7 +154,7 @@
                     <div class="map-toolbar">
                         <div class="map-filters">
                             <div class="filter-group">
-                                <label for="filtroUfMapa" class="filter-label"><i data-lucide="compass" style="width:16px;height:16px;display:inline;"></i> Filtrar Estado:</label>
+                                <label for="filtroUfMapa" class="filter-label"><i data-lucide="filter"></i> Filtrar Estado:</label>
                                 <select id="filtroUfMapa" class="select-custom">
                                     <option value="TODAS">Brasil Geral (Todas as 27 UFs)</option>
                                     <!-- Preenchido via script.js -->
@@ -174,8 +174,14 @@
                             </div>
                         </div>
 
-                        <div id="statusMapaTrechos" style="font-size:0.8rem; font-weight:600; color:var(--text-muted);">
-                            Exibindo 3.019 trechos no Brasil
+                        <div class="map-status-info">
+                            <span id="statusMapaTrechos">Exibindo 3.019 trechos no Brasil</span>
+                            <div class="tooltip-container" tabindex="0" role="button" aria-label="Informações sobre trechos desenhados">
+                                <i data-lucide="info" class="tooltip-trigger-icon"></i>
+                                <div class="tooltip-bubble" role="tooltip">
+                                    Há menos trechos desenhados no mapa por conta de sobreposição de trechos, devidos a falhas na nomeação durante a coleta de dados da PRF.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
