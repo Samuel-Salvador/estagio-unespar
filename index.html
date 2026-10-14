@@ -152,7 +152,7 @@
                 <!-- Painel do Mapa Interativo das Rodovias -->
                 <div class="map-section-card">
                     <div class="map-toolbar">
-                        <div class="map-filters">
+                        <div class="map-toolbar-left">
                             <div class="filter-group">
                                 <label for="filtroUfMapa" class="filter-label"><i data-lucide="filter"></i> Filtrar Estado:</label>
                                 <select id="filtroUfMapa" class="select-custom">
@@ -161,27 +161,27 @@
                                 </select>
                             </div>
 
-                            <div class="pill-group">
-                                <button class="btn-pill active" data-layer="todos" id="btnLayerTodos">
-                                    <i data-lucide="grid"></i> Todas as Rodovias
-                                </button>
-                                <button class="btn-pill pill-rain" data-layer="chuva" id="btnLayerChuva">
-                                    <i data-lucide="cloud-rain"></i> Mais Afetadas por Chuva
-                                </button>
-                                <button class="btn-pill pill-holiday" data-layer="feriado" id="btnLayerFeriado">
-                                    <i data-lucide="calendar"></i> Mais Afetadas por Feriados
-                                </button>
+                            <div class="map-status-info">
+                                <span id="statusMapaTrechos">Exibindo 3.019 trechos no Brasil</span>
+                                <div class="tooltip-container" tabindex="0" role="button" aria-label="Informações sobre trechos desenhados">
+                                    <i data-lucide="info" class="tooltip-trigger-icon"></i>
+                                    <div class="tooltip-bubble" role="tooltip">
+                                        Há menos trechos desenhados no mapa por conta de sobreposição de trechos, devidos a falhas na nomeação durante a coleta de dados da PRF.
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="map-status-info">
-                            <span id="statusMapaTrechos">Exibindo 3.019 trechos no Brasil</span>
-                            <div class="tooltip-container" tabindex="0" role="button" aria-label="Informações sobre trechos desenhados">
-                                <i data-lucide="info" class="tooltip-trigger-icon"></i>
-                                <div class="tooltip-bubble" role="tooltip">
-                                    Há menos trechos desenhados no mapa por conta de sobreposição de trechos, devidos a falhas na nomeação durante a coleta de dados da PRF.
-                                </div>
-                            </div>
+                        <div class="pill-group">
+                            <button class="btn-pill active" data-layer="todos" id="btnLayerTodos">
+                                <i data-lucide="grid"></i> Todas as Rodovias
+                            </button>
+                            <button class="btn-pill pill-rain" data-layer="chuva" id="btnLayerChuva">
+                                <i data-lucide="cloud-rain"></i> Mais Afetadas por Chuva
+                            </button>
+                            <button class="btn-pill pill-holiday" data-layer="feriado" id="btnLayerFeriado">
+                                <i data-lucide="calendar"></i> Mais Afetadas por Feriados
+                            </button>
                         </div>
                     </div>
 
