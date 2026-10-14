@@ -111,15 +111,56 @@ async function carregarDados() {
 }
 
 function popularKpisGlobais() {
-    const meta = appState.dados.metadata;
+    const meta = appState.dados && appState.dados.metadata;
     if (!meta) return;
 
-    document.getElementById('kpiTrechos').innerText = meta.total_trechos.toLocaleString('pt-BR');
-    document.getElementById('kpiSinistros').innerText = meta.total_sinistros.toLocaleString('pt-BR');
-    document.getElementById('kpiEsparsidade').innerText = meta.esparsidade_global + '%';
-    document.getElementById('kpiRuido').innerText = meta.ruido_branco_global + '%';
-    document.getElementById('kpiChuva').innerText = meta.chuva_sig_global + '%';
-    document.getElementById('kpiFeriado').innerText = meta.feriado_sig_global + '%';
+    const elTrechos = document.getElementById('kpiTrechos');
+    const elSinistros = document.getElementById('kpiSinistros');
+
+    if (elTrechos) elTrechos.innerText = meta.total_trechos.toLocaleString('pt-BR');
+    if (elSinistros) elSinistros.innerText = meta.total_sinistros.toLocaleString('pt-BR');
+
+    atualizarCardsMetricasEstado(appState.ufSelecionada || 'TODAS');
+}
+
+function atualizarCardsMetricasEstado(uf) {
+    const meta = appState.dados && appState.dados.metadata;
+    const estados = appState.dados && appState.dados.estados;
+    if (!meta || !estados) return;
+
+    const tituloEl = document.getElementById('tituloMetricasEstado');
+    const subtituloEl = document.getElementById('subtituloMetricasEstado');
+    const elEsparsidade = document.getElementById('kpiEsparsidade');
+    const elRuido = document.getElementById('kpiRuido');
+    const elChuva = document.getElementById('kpiChuva');
+    const elFeriado = document.getElementById('kpiFeriado');
+
+    if (!elEsparsidade || !elRuido || !elChuva || !elFeriado) return;
+
+    if (uf === 'TODAS' || !uf) {
+        if (tituloEl) tituloEl.innerHTML = '<i data-lucide="bar-chart-2"></i> Métricas — Brasil Geral';
+        if (subtituloEl) subtituloEl.innerText = 'Consolidado Nacional (27 UFs)';
+
+        elEsparsidade.innerText = meta.esparsidade_global + '%';
+        elRuido.innerText = meta.ruido_branco_global + '%';
+        elChuva.innerText = meta.chuva_sig_global + '%';
+        elFeriado.innerText = meta.feriado_sig_global + '%';
+    } else {
+        const est = estados.find(e => e.uf === uf);
+        if (est) {
+            if (tituloEl) tituloEl.innerHTML = `<i data-lucide="map-pin"></i> Métricas — ${est.uf}`;
+            if (subtituloEl) subtituloEl.innerText = `Região ${est.regiao} (${est.trechos} trechos | ${est.sinistros.toLocaleString('pt-BR')} acidentes)`;
+
+            elEsparsidade.innerText = est.esparsidade + '%';
+            elRuido.innerText = est.ruido_branco_pct + '%';
+            elChuva.innerText = est.chuva_sig_pct + '%';
+            elFeriado.innerText = est.feriado_sig_pct + '%';
+        }
+    }
+
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }
 
 // ==========================================================================
@@ -191,6 +232,7 @@ function inicializarMapa() {
         atualizarCamadaMapa();
         ajustarZoomMapaPorUf(appState.ufSelecionada);
         atualizarGraficosObservatorio();
+        atualizarCardsMetricasEstado(appState.ufSelecionada);
     });
 
     atualizarMascaraEContorno();

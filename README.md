@@ -13,7 +13,7 @@ Integra modelos estatísticos de previsão de séries temporais (**SARIMAX**) ao
 * Detalhamento da base da PRF (332.679 acidentes no quinquênio 2020–2024).
 * Formulação matemática rigorosa do algoritmo **SARIMAX** com componentes sazonais semanais ($s=7$) e variáveis exógenas (chuva e feriados).
 
-### 2. Resultados Nacionais & Mapa Interativo (Escala Meso)
+### 2. Resultados & Mapa Interativo (Escala Meso)
 * **Sumário Executivo Nacional**: KPIs com 3.019 trechos modelados, 94,8% de esparsidade, 92,0% de ruído branco (Ljung-Box), 42,7% de sensibilidade à chuva e 12,2% a feriados.
 * **Mapa Rodoviário Interativo (Leaflet.js)**: Traçados vetoriais de todas as rodovias federais, com filtros para trechos afetados por chuva (azul), afetados por feriados (laranja) e top 50 segmentos mais perigosos (vermelho). Zoom inteligente por UF e popups detalhados.
 * **Gráficos Dinâmicos (Chart.js)**: Comparativo das 27 UFs vs. Média Nacional e detalhamento ao selecionar um estado específico.

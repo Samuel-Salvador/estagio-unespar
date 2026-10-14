@@ -33,7 +33,7 @@
                 <i data-lucide="book-open"></i> Fundamentação Teórica
             </a>
             <a href="#" class="nav-link" data-target="observatorio">
-                <i data-lucide="map-pin"></i> Resultados Nacionais & Mapa
+                <i data-lucide="map-pin"></i> Resultados & Mapa
             </a>
             <a href="#" class="nav-link" data-target="previsao">
                 <i data-lucide="trending-up"></i> Previsão SARIMAX
@@ -119,7 +119,7 @@
                 </p>
             </section>
 
-            <!-- ABA 2: RESULTADOS NACIONAIS, MAPA E TABELAS -->
+            <!-- ABA 2: RESULTADOS, MAPA E TABELAS -->
             <section id="observatorio" class="page-section">
                 <div class="section-header">
                     <h1>Observatório de Tráfego Preditivo — Escala Meso Nacional</h1>
@@ -128,8 +128,8 @@
                     </p>
                 </div>
 
-                <!-- Grid de KPIs Globais -->
-                <div class="kpi-grid">
+                <!-- Grid de KPIs Globais (Visão Macro Nacional) -->
+                <div class="kpi-grid kpi-grid-top">
                     <div class="kpi-card">
                         <div class="kpi-card-header">
                             <span class="kpi-title">Trechos de 20 km</span>
@@ -146,42 +146,6 @@
                         </div>
                         <div class="kpi-value" id="kpiSinistros">332.679</div>
                         <div class="kpi-subtext">Quinquênio 2020–2024 (PRF)</div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-card-header">
-                            <span class="kpi-title">Esparsidade Global</span>
-                            <div class="kpi-icon"><i data-lucide="percent"></i></div>
-                        </div>
-                        <div class="kpi-value" id="kpiEsparsidade">94.8%</div>
-                        <div class="kpi-subtext">Média de dias sem sinistro</div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-card-header">
-                            <span class="kpi-title">Ruído Branco</span>
-                            <div class="kpi-icon"><i data-lucide="check-circle-2"></i></div>
-                        </div>
-                        <div class="kpi-value" id="kpiRuido">92.0%</div>
-                        <div class="kpi-subtext"><span class="kpi-badge badge-white">Ljung-Box p > 0.05</span></div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-card-header">
-                            <span class="kpi-title">Sensibilidade à Chuva</span>
-                            <div class="kpi-icon"><i data-lucide="cloud-rain"></i></div>
-                        </div>
-                        <div class="kpi-value" id="kpiChuva">42.7%</div>
-                        <div class="kpi-subtext"><span class="kpi-badge badge-rain">&beta; chuva (p < 0.05)</span></div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-card-header">
-                            <span class="kpi-title">Sensibilidade Feriados</span>
-                            <div class="kpi-icon"><i data-lucide="calendar"></i></div>
-                        </div>
-                        <div class="kpi-value" id="kpiFeriado">12.2%</div>
-                        <div class="kpi-subtext"><span class="kpi-badge badge-holiday">&beta; feriados (p < 0.05)</span></div>
                     </div>
                 </div>
 
@@ -215,14 +179,68 @@
                         </div>
                     </div>
 
-                    <div class="map-container-wrapper">
-                        <div id="mapaRodovias"></div>
-                        <div class="map-legend">
-                            <div class="legend-title">Legenda</div>
-                            <div id="conteudoLegendaMapa">
-                                <div class="legend-item">
-                                    <div class="legend-line" style="background:#2563eb;"></div>
-                                    <span>Trecho monitorado</span>
+                    <!-- Layout em Grid: Mapa à Esquerda e Painel de Métricas do Estado à Direita -->
+                    <div class="map-layout-grid">
+                        <div class="map-container-wrapper">
+                            <div id="mapaRodovias"></div>
+                            <div class="map-legend">
+                                <div class="legend-title">Legenda</div>
+                                <div id="conteudoLegendaMapa">
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background:#2563eb;"></div>
+                                        <span>Trecho monitorado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Painel Lateral de Métricas Dinâmicas (Estado / Brasil) -->
+                        <div class="map-metrics-panel">
+                            <div class="metrics-panel-header">
+                                <div class="metrics-panel-title-wrap">
+                                    <div class="metrics-panel-icon"><i data-lucide="bar-chart-2"></i></div>
+                                    <div class="metrics-panel-headings">
+                                        <h4 id="tituloMetricasEstado" class="metrics-panel-title">Métricas — Brasil Geral</h4>
+                                        <span id="subtituloMetricasEstado" class="metrics-panel-subtitle">Consolidado Nacional (27 UFs)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="metrics-panel-cards">
+                                <div class="metric-card-compact">
+                                    <div class="metric-card-header">
+                                        <span class="metric-card-title">Esparsidade</span>
+                                        <div class="metric-card-icon"><i data-lucide="percent"></i></div>
+                                    </div>
+                                    <div class="metric-card-value" id="kpiEsparsidade">94.8%</div>
+                                    <div class="metric-card-subtext">Média de dias sem sinistro</div>
+                                </div>
+
+                                <div class="metric-card-compact">
+                                    <div class="metric-card-header">
+                                        <span class="metric-card-title">Ruído Branco</span>
+                                        <div class="metric-card-icon"><i data-lucide="check-circle-2"></i></div>
+                                    </div>
+                                    <div class="metric-card-value" id="kpiRuido">92.0%</div>
+                                    <div class="metric-card-subtext"><span class="kpi-badge badge-white">Ljung-Box p &gt; 0.05</span></div>
+                                </div>
+
+                                <div class="metric-card-compact">
+                                    <div class="metric-card-header">
+                                        <span class="metric-card-title">Sensib. à Chuva</span>
+                                        <div class="metric-card-icon"><i data-lucide="cloud-rain"></i></div>
+                                    </div>
+                                    <div class="metric-card-value" id="kpiChuva">42.7%</div>
+                                    <div class="metric-card-subtext"><span class="kpi-badge badge-rain">&beta; chuva (p &lt; 0.05)</span></div>
+                                </div>
+
+                                <div class="metric-card-compact">
+                                    <div class="metric-card-header">
+                                        <span class="metric-card-title">Sensib. a Feriados</span>
+                                        <div class="metric-card-icon"><i data-lucide="calendar"></i></div>
+                                    </div>
+                                    <div class="metric-card-value" id="kpiFeriado">12.2%</div>
+                                    <div class="metric-card-subtext"><span class="kpi-badge badge-holiday">&beta; feriados (p &lt; 0.05)</span></div>
                                 </div>
                             </div>
                         </div>
