@@ -546,6 +546,53 @@ main {
     transform: translateY(0);
 }
 
+/* Tooltip para botões de ação desabilitados na tabela (ex.: BR-0) */
+.tooltip-container.tooltip-btn-disabled {
+    display: inline-flex;
+    position: relative;
+    cursor: not-allowed;
+    vertical-align: middle;
+}
+
+.tooltip-container.tooltip-btn-disabled .btn-page:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    cursor: not-allowed;
+}
+
+.tooltip-container.tooltip-btn-disabled .tooltip-bubble {
+    width: 280px;
+    right: calc(100% + 8px);
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%) translateX(4px);
+    z-index: 1050;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+}
+
+.tooltip-container.tooltip-btn-disabled .tooltip-bubble::after {
+    top: 50%;
+    right: -10px;
+    bottom: auto;
+    transform: translateY(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent transparent #0f172a;
+}
+
+.tooltip-container.tooltip-btn-disabled:hover .tooltip-bubble,
+.tooltip-container.tooltip-btn-disabled:focus-within .tooltip-bubble {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateX(0);
+}
+
 /* Layout do Mapa com Painel Lateral de Métricas */
 .map-layout-grid {
     display: grid;

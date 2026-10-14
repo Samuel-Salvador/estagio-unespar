@@ -966,6 +966,24 @@ function atualizarConteudoTabela() {
 
         lista.forEach(t => {
             const tr = document.createElement('tr');
+            const isBr0 = t.is_br0 || t.rodovia === 'BR-0' || t.rodovia === 'BR-00' || t.rodovia === 'BR-000';
+            const msgBr0 = 'Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados';
+
+            const btnAcao = isBr0 ? `
+                <span class="tooltip-container tooltip-btn-disabled" title="${msgBr0}">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled title="${msgBr0}">
+                        Prever
+                    </button>
+                    <div class="tooltip-bubble">
+                        ${msgBr0}
+                    </div>
+                </span>
+            ` : `
+                <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
+                    Prever
+                </button>
+            `;
+
             tr.innerHTML = `
                 <td><strong>${t.posicao}</strong></td>
                 <td><strong>${t.rodovia}</strong> / <span class="table-badge badge-uf">${t.uf}</span></td>
@@ -978,11 +996,7 @@ function atualizarConteudoTabela() {
                 <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_chuva} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_chuva, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_feriado} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_feriado, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
-                <td>
-                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTop50NoSimulador('${t.rodovia}', '${t.uf}', '${t.segmento}')">
-                        Prever
-                    </button>
-                </td>
+                <td>${btnAcao}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -1046,6 +1060,24 @@ function atualizarConteudoTabela() {
 
         paginaItens.forEach(t => {
             const tr = document.createElement('tr');
+            const isBr0 = t.is_br0 || t.br === 'BR-0' || t.br === 'BR-00' || t.br === 'BR-000' || (t.id && t.id.startsWith('BR0_'));
+            const msgBr0 = 'Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados';
+
+            const btnAcao = isBr0 ? `
+                <span class="tooltip-container tooltip-btn-disabled" title="${msgBr0}">
+                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" disabled title="${msgBr0}">
+                        Prever
+                    </button>
+                    <div class="tooltip-bubble">
+                        ${msgBr0}
+                    </div>
+                </span>
+            ` : `
+                <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
+                    Prever
+                </button>
+            `;
+
             tr.innerHTML = `
                 <td><strong>${t.br}</strong> / <span class="table-badge badge-uf">${t.uf}</span></td>
                 <td>km ${t.km_inicio}–${t.km_fim}</td>
@@ -1057,11 +1089,7 @@ function atualizarConteudoTabela() {
                 <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_chuva} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_chuva, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace; font-size:0.75rem;">${t.beta_feriado} <span style="font-size:0.68rem; color:var(--text-muted);">(${formatarPValor(t.p_feriado, 3)})</span></td>
                 <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
-                <td>
-                    <button class="btn-page" style="padding:0.18rem 0.45rem; font-size:0.72rem;" onclick="carregarTrechoNoSimulador('${t.id}')">
-                        Prever
-                    </button>
-                </td>
+                <td>${btnAcao}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -1114,7 +1142,7 @@ function atualizarRodoviasPrevisao() {
 
     const rodovias = [...new Set(
         appState.dados.trechos
-            .filter(t => t.uf === uf)
+            .filter(t => t.uf === uf && !t.is_br0 && t.br !== 'BR-0' && t.br !== 'BR-00' && t.br !== 'BR-000')
             .map(t => t.br)
     )].sort();
     rodovias.forEach(br => {
@@ -1134,7 +1162,7 @@ function atualizarTrechosPrevisao() {
     selectTrecho.innerHTML = '';
 
     const trechos = appState.dados.trechos
-        .filter(t => t.uf === uf && t.br === br)
+        .filter(t => t.uf === uf && t.br === br && !t.is_br0 && t.br !== 'BR-0' && t.br !== 'BR-00' && t.br !== 'BR-000')
         .sort((a, b) => b.acidentes - a.acidentes);
     trechos.forEach(t => {
         const opt = document.createElement('option');
@@ -1451,6 +1479,11 @@ window.carregarTrechoNoSimulador = function(trechoId) {
     const trecho = appState.dados.trechos.find(t => t.id === trechoId);
     if (!trecho) return;
 
+    if (trecho.is_br0 || trecho.br === 'BR-0' || trecho.br === 'BR-00' || trecho.br === 'BR-000') {
+        alert("Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados");
+        return;
+    }
+
     trocarAba('previsao');
 
     const selectUf = document.getElementById('prevUf');
@@ -1470,6 +1503,10 @@ window.carregarTrechoNoSimulador = function(trechoId) {
 
 window.carregarTop50NoSimulador = function(br, uf, segmento) {
     if (!appState.dados) return;
+    if (br === 'BR-0' || br === 'BR-00' || br === 'BR-000') {
+        alert("Todas as BR-0 são rodovias criadas pela própria PRF quando não se tem um dado concreto, por isso não se pode fazer uma previsão usando estes dados");
+        return;
+    }
     const kmIni = parseInt(segmento.split('–')[0].replace('km ', ''));
     const trecho = appState.dados.trechos.find(t => t.br === br && t.uf === uf && t.km_inicio === kmIni);
     if (trecho) {
