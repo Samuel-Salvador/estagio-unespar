@@ -869,8 +869,9 @@ function atualizarConteudoTabela() {
                 <th>Trecho (km)</th>
                 <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade</th>
-                <th>SARIMAX</th>
+                <th>Modelo</th>
                 <th style="text-align:right;">MAE</th>
+                <th style="text-align:right;">RMSE</th>
                 <th style="text-align:right;">&beta; Chuva (p-val)</th>
                 <th style="text-align:right;">&beta; Feriados (p-val)</th>
                 <th style="text-align:right;">Ljung-Box (p-val)</th>
@@ -888,6 +889,7 @@ function atualizarConteudoTabela() {
                 <td style="text-align:right;">${t.esparsidade}%</td>
                 <td><code style="font-size:0.75rem; background:#f1f5f9; padding:2px 4px; border-radius:4px;">${t.order}</code></td>
                 <td style="text-align:right; font-family:monospace;">${t.mae}</td>
+                <td style="text-align:right; font-family:monospace;">${t.rmse}</td>
                 <td style="text-align:right; font-family:monospace;">${t.beta_chuva} (${formatarPValor(t.p_chuva, 3)})</td>
                 <td style="text-align:right; font-family:monospace;">${t.beta_feriado} (${formatarPValor(t.p_feriado, 3)})</td>
                 <td style="text-align:right; font-family:monospace;">${formatarPValor(t.ljung_box_p, 4)}</td>
