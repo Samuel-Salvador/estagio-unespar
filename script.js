@@ -396,7 +396,7 @@ function atualizarCamadaMapa() {
                 </div>
                 <div class="popup-body">
                     <p><span>Modelo SARIMAX:</span> <strong>${t.order}×${t.seasonal}</strong></p>
-                    <p><span>MAE Médio (2024):</span> <strong>${t.mae}</strong></p>
+                    <p><span>MAE Médio:</span> <strong>${t.mae}</strong></p>
                     <p><span>Ruído Branco:</span> <strong>${t.ruido_branco ? 'Sim (p > 0.05)' : 'Não'}</strong></p>
                     <p><span>&beta; Chuva:</span> <strong>${t.beta_chuva} (${t.chuva_sig ? 'Sig. p < 0.05' : 'Não sig.'})</strong></p>
                     <p><span>&beta; Feriados:</span> <strong>${t.beta_feriado} (${t.feriado_sig ? 'Sig. p < 0.05' : 'Não sig.'})</strong></p>
@@ -787,8 +787,8 @@ function atualizarConteudoTabela() {
                 <th style="text-align:right;">Trechos (20 km)</th>
                 <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade (%)</th>
-                <th style="text-align:right;">MAE (2024)</th>
-                <th style="text-align:right;">RMSE (2024)</th>
+                <th style="text-align:right;">MAE</th>
+                <th style="text-align:right;">RMSE</th>
                 <th style="text-align:right;">Ruído Branco (%)</th>
                 <th style="text-align:right;">Chuva Sig. (%)</th>
                 <th style="text-align:right;">Feriados Sig. (%)</th>
@@ -828,8 +828,8 @@ function atualizarConteudoTabela() {
                 <th style="text-align:right;">Trechos (20 km)</th>
                 <th style="text-align:right;">Sinistros</th>
                 <th style="text-align:right;">Esparsidade Média</th>
-                <th style="text-align:right;">MAE (2024)</th>
-                <th style="text-align:right;">RMSE (2024)</th>
+                <th style="text-align:right;">MAE</th>
+                <th style="text-align:right;">RMSE</th>
                 <th style="text-align:right;">Ruído Branco (%)</th>
                 <th style="text-align:right;">Chuva Sig. (%)</th>
                 <th style="text-align:right;">Feriados Sig. (%)</th>
