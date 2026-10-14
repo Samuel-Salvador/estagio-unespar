@@ -1303,22 +1303,7 @@ function executarPrevisaoSARIMAX() {
     const cenarioChuva = document.getElementById('prevCenarioChuva').value;
     const cenarioFeriado = document.getElementById('prevCenarioFeriado').value;
 
-    let chuvaMm = [0, 0, 0, 0, 0, 0, 0];
-    if (cenarioChuva === 'leve') chuvaMm = [5, 5, 5, 5, 5, 5, 5];
-    else if (cenarioChuva === 'moderada') chuvaMm = [15, 15, 15, 15, 15, 15, 15];
-    else if (cenarioChuva === 'tempestade') chuvaMm = [40, 40, 40, 40, 40, 40, 40];
-    else if (cenarioChuva === 'fim_de_semana') chuvaMm = [0, 0, 0, 0, 0, 30, 30];
-
-    let feriados = [0, 0, 0, 0, 0, 0, 0];
-    let prolongados = [0, 0, 0, 0, 0, 0, 0];
-    if (cenarioFeriado === 'prolongado') {
-        feriados[2] = 1; // Sexta-feira
-        prolongados[2] = 1;
-    } else if (cenarioFeriado === 'meio_semana') {
-        feriados[2] = 1; // Quarta-feira
-    }
-
-    // Datas futuras (próximos 7 dias)
+    // 1. Datas futuras dinâmicas (próximos 7 dias a partir de amanhã)
     const datas = [];
     const diasSemana = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const hoje = new Date();
@@ -1326,8 +1311,57 @@ function executarPrevisaoSARIMAX() {
         const d = new Date(hoje);
         d.setDate(hoje.getDate() + i);
         datas.push({
+            data: d,
             dataStr: d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-            diaSemana: diasSemana[d.getDay()]
+            diaSemana: diasSemana[d.getDay()],
+            dayOfWeek: d.getDay() // 0 = Domingo, 1 = Segunda, 2 = Terça, 3 = Quarta, 4 = Quinta, 5 = Sexta, 6 = Sábado
+        });
+    }
+
+    // 2. Mapeamento dinâmico de Chuva
+    let chuvaMm = [0, 0, 0, 0, 0, 0, 0];
+    if (cenarioChuva === 'leve') {
+        chuvaMm = [5, 5, 5, 5, 5, 5, 5];
+    } else if (cenarioChuva === 'moderada') {
+        chuvaMm = [15, 15, 15, 15, 15, 15, 15];
+    } else if (cenarioChuva === 'tempestade') {
+        chuvaMm = [40, 40, 40, 40, 40, 40, 40];
+    } else if (cenarioChuva === 'fim_de_semana') {
+        // Chuva concentrada no sábado e domingo reais da janela de 7 dias
+        chuvaMm = datas.map(d => (d.dayOfWeek === 6 || d.dayOfWeek === 0) ? 30 : 0);
+    }
+
+    // 3. Mapeamento dinâmico de Feriados
+    let feriados = [0, 0, 0, 0, 0, 0, 0];
+    let prolongados = [0, 0, 0, 0, 0, 0, 0];
+
+    if (cenarioFeriado === 'prolongado' || cenarioFeriado === 'prolongado_sexta') {
+        // Feriado Prolongado com feriado oficial na Sexta-feira
+        datas.forEach((d, i) => {
+            if (d.dayOfWeek === 5) {
+                feriados[i] = 1; // Sexta-feira: dia de feriado nacional
+                prolongados[i] = 1;
+            } else if (d.dayOfWeek === 6 || d.dayOfWeek === 0) {
+                prolongados[i] = 1; // Sábado e Domingo: dias de tráfego prolongado
+            }
+        });
+    } else if (cenarioFeriado === 'prolongado_segunda') {
+        // Feriado Prolongado com feriado oficial na Segunda-feira
+        datas.forEach((d, i) => {
+            if (d.dayOfWeek === 1) {
+                feriados[i] = 1; // Segunda-feira: dia de feriado nacional
+                prolongados[i] = 1;
+            } else if (d.dayOfWeek === 6 || d.dayOfWeek === 0) {
+                prolongados[i] = 1; // Sábado e Domingo: dias de tráfego prolongado
+            }
+        });
+    } else if (cenarioFeriado === 'meio_semana') {
+        // Feriado isolado no meio da semana (Quarta-feira)
+        datas.forEach((d, i) => {
+            if (d.dayOfWeek === 3) {
+                feriados[i] = 1; // Quarta-feira: feriado nacional
+                prolongados[i] = 0;
+            }
         });
     }
 
@@ -1392,11 +1426,18 @@ function executarPrevisaoSARIMAX() {
             const base = baseline[i] || 0.0;
             const diffDia = base > 0 ? ((pred - base) / base) * 100 : 0;
 
+            let tagFeriado = 'Não';
+            if (feriados[i]) {
+                tagFeriado = '<span class="table-badge badge-holiday">Sim</span>';
+            } else if (prolongados[i]) {
+                tagFeriado = '<span class="table-badge badge-holiday" style="background:#ffedd5; color:#c2410c; border:1px solid #fed7aa;">Prolongado</span>';
+            }
+
             tr.innerHTML = `
                 <td><strong>${d.diaSemana}</strong> <span style="color:#64748b; font-size:0.75rem;">(${d.dataStr})</span></td>
                 <td><strong style="color:var(--primary); font-size:1rem;">${pred.toFixed(2)}</strong> <span style="font-size:0.75rem; color:#64748b;">[${icInferior[i].toFixed(1)}–${icSuperior[i].toFixed(1)}]</span></td>
                 <td>${chuvaMm[i] > 0 ? `<span class="table-badge badge-rain">${chuvaMm[i]} mm</span>` : '0 mm'}</td>
-                <td>${feriados[i] ? '<span class="table-badge badge-holiday">Sim</span>' : 'Não'}</td>
+                <td>${tagFeriado}</td>
                 <td><span style="font-weight:600; color:${diffDia > 5 ? 'var(--accent-danger)' : (diffDia < -5 ? 'var(--accent-success)' : 'inherit')};">${diffDia >= 0 ? '+' : ''}${diffDia.toFixed(0)}%</span></td>
             `;
             corpoTabela.appendChild(tr);
