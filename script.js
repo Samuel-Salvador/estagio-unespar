@@ -25,6 +25,37 @@ const appState = {
     trechoSelecionadoPrevisao: null
 };
 
+// Mapeamento das 27 UFs Brasileiras para Nome Completo
+const NOMES_UFS = {
+    'AC': 'Acre',
+    'AL': 'Alagoas',
+    'AP': 'Amapá',
+    'AM': 'Amazonas',
+    'BA': 'Bahia',
+    'CE': 'Ceará',
+    'DF': 'Distrito Federal',
+    'ES': 'Espírito Santo',
+    'GO': 'Goiás',
+    'MA': 'Maranhão',
+    'MT': 'Mato Grosso',
+    'MS': 'Mato Grosso do Sul',
+    'MG': 'Minas Gerais',
+    'PA': 'Pará',
+    'PB': 'Paraíba',
+    'PR': 'Paraná',
+    'PE': 'Pernambuco',
+    'PI': 'Piauí',
+    'RJ': 'Rio de Janeiro',
+    'RN': 'Rio Grande do Norte',
+    'RS': 'Rio Grande do Sul',
+    'RO': 'Rondônia',
+    'RR': 'Roraima',
+    'SC': 'Santa Catarina',
+    'SP': 'São Paulo',
+    'SE': 'Sergipe',
+    'TO': 'Tocantins'
+};
+
 // ==========================================================================
 // 1. INICIALIZAÇÃO E NAVEGAÇÃO
 // ==========================================================================
@@ -245,12 +276,20 @@ function inicializarMapa() {
 
 function configurarFiltrosObservatorio() {
     const selectUf = document.getElementById('filtroUfMapa');
+    if (!selectUf) return;
     selectUf.innerHTML = '<option value="TODAS">Brasil Geral (Todas as 27 UFs)</option>';
 
-    appState.dados.estados.forEach(est => {
+    // Ordena os estados em ordem alfabética pelo nome completo
+    const estadosOrdenados = [...appState.dados.estados].sort((a, b) => {
+        const nomeA = NOMES_UFS[a.uf] || a.uf;
+        const nomeB = NOMES_UFS[b.uf] || b.uf;
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
+
+    estadosOrdenados.forEach(est => {
         const opt = document.createElement('option');
         opt.value = est.uf;
-        opt.textContent = `${est.uf} — ${est.regiao} (${est.trechos} trechos | ${est.sinistros.toLocaleString('pt-BR')} acidentes)`;
+        opt.textContent = NOMES_UFS[est.uf] || est.uf;
         selectUf.appendChild(opt);
     });
 }
