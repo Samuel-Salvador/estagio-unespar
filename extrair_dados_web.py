@@ -85,9 +85,22 @@ def fallback_topologico_prf(sub_acidentes):
         
     med = np.median(pts, axis=0)
     dists = np.sqrt((pts[:, 0] - med[0])**2 + (pts[:, 1] - med[1])**2)
-    valid_pts = pts[dists < 0.12] # tolerância de ~12 km
+    valid_pts = pts[dists < 0.20] # tolerância de ~20 km
     if len(valid_pts) < 2:
-        valid_pts = pts
+        # Se os pontos estiverem divididos em polos distantes (ex: delegacia vs rodovia),
+        # procura o par de acidentes mais próximo entre si
+        min_pdist = 999.0
+        best_pair = None
+        for i in range(len(pts)):
+            for j in range(i + 1, len(pts)):
+                d = np.sqrt((pts[i, 0] - pts[j, 0])**2 + (pts[i, 1] - pts[j, 1])**2)
+                if d < min_pdist:
+                    min_pdist = d
+                    best_pair = (pts[i], pts[j])
+        if min_pdist < 0.25: # < ~25 km
+            valid_pts = np.array(best_pair)
+        else:
+            return [[round(float(med[0]), 5), round(float(med[1]), 5)]]
         
     coords_centered = valid_pts - np.mean(valid_pts, axis=0)
     cov = np.cov(coords_centered, rowvar=False)
@@ -111,7 +124,9 @@ def fallback_topologico_prf(sub_acidentes):
     filtered = [smooth_pts[0]]
     for i in range(1, len(smooth_pts)):
         p_curr = smooth_pts[i]
-        if i >= 2:
+        if p_curr == filtered[-1]:
+            continue
+        if len(filtered) >= 2:
             v1 = np.array(filtered[-1]) - np.array(filtered[-2])
             v2 = np.array(p_curr) - np.array(filtered[-1])
             len1 = np.linalg.norm(v1)
@@ -139,16 +154,20 @@ for _, r in df_res.iterrows():
     
     usar_snv = False
     if pts_snv and len(pts_snv) >= 2:
-        c_snv = np.mean(pts_snv, axis=0)
-        if sub_prf is not None and len(sub_prf) > 0:
-            med_prf = [sub_prf['lat'].median(), sub_prf['lon'].median()]
-            d_centro = haversine_km([c_snv[1], c_snv[0]], [med_prf[1], med_prf[0]])
-            if d_centro < 35.0:
-                usar_snv = True
+        len_snv = sum(haversine_km([pts_snv[i][1], pts_snv[i][0]], [pts_snv[i+1][1], pts_snv[i+1][0]]) for i in range(len(pts_snv) - 1))
+        # Se a extensão do vetor oficial SNV for coerente para um trecho de 20 km (entre 5 e 40 km)
+        if 5.0 <= len_snv <= 40.0:
+            if sub_prf is not None and len(sub_prf) > 0:
+                c_snv = np.mean(pts_snv, axis=0)
+                dists_prf = [haversine_km([c_snv[1], c_snv[0]], [row['lon'], row['lat']]) for _, row in sub_prf.iterrows()]
+                pts_proximos = sum(1 for d in dists_prf if d < 30.0)
+                # Aceita o SNV se houver pelo menos 2 acidentes próximos, ou 20% do volume, ou o acidente mais próximo estiver a < 15 km
+                if pts_proximos >= min(2, len(sub_prf)) or (pts_proximos / len(sub_prf)) >= 0.2 or min(dists_prf) < 15.0:
+                    usar_snv = True
+                else:
+                    usar_snv = False
             else:
-                usar_snv = False
-        else:
-            usar_snv = True
+                usar_snv = True
             
     if usar_snv:
         coords_map[chave] = {
