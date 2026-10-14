@@ -1030,18 +1030,33 @@ main {
 
 .pagination-controls {
     display: flex;
+    align-items: center;
     gap: 0.5rem;
 }
 
 .btn-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
     padding: 0.35rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: #ffffff;
     font-size: 0.8rem;
     font-weight: 500;
+    line-height: 1.2;
     cursor: pointer;
     transition: all 0.15s;
+    vertical-align: middle;
+}
+
+.btn-page svg,
+.btn-page i {
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    flex-shrink: 0;
 }
 
 .btn-page:hover:not(:disabled) {
