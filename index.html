@@ -325,7 +325,7 @@
             <!-- ABA 3: PREVISÃO SARIMAX (INFERÊNCIA FUTURA REAL) -->
             <section id="previsao" class="page-section">
                 <div class="section-header">
-                    <h1>Simulador de Previsão Futura — SARIMAX</h1>
+                    <h1>Simulador de Previsão de Sinistro</h1>
                     <p>
                         Selecione qualquer trecho da malha rodoviária federal e configure o cenário de precipitação e feriados.
                         O motor executa a previsão utilizando a parametrização do modelo real treinado para aquele segmento.
@@ -333,61 +333,79 @@
                 </div>
 
                 <div class="predict-layout">
-                    <!-- Coluna de Controles e Variáveis -->
-                    <div class="predict-form-card">
-                        <div class="form-section-title">1. Localização Espacial</div>
+                    <!-- Coluna de Inputs: 2 Cards Separados -->
+                    <div class="predict-inputs-wrapper">
                         
-                        <div class="form-group">
-                            <label for="prevUf">Estado (UF)</label>
-                            <select id="prevUf" class="select-custom">
-                                <!-- Preenchido dinamicamente -->
-                            </select>
+                        <!-- 1º Card: Localização Espacial -->
+                        <div class="predict-form-card">
+                            <div class="form-card-header">
+                                <div class="form-card-title">
+                                    <i data-lucide="map-pin" class="card-title-icon"></i>
+                                    <span>Localização Espacial</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="prevUf">Estado (UF)</label>
+                                <select id="prevUf" class="select-custom">
+                                    <!-- Preenchido dinamicamente -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prevRodovia">Rodovia Federal (BR)</label>
+                                <select id="prevRodovia" class="select-custom">
+                                    <!-- Preenchido dinamicamente -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prevTrecho">Segmento Isométrico (20 km)</label>
+                                <select id="prevTrecho" class="select-custom">
+                                    <!-- Preenchido dinamicamente -->
+                                </select>
+                            </div>
+
+                            <!-- Informações do Modelo Construído para o Trecho -->
+                            <div id="prevTrechoSummary" class="selected-trecho-summary">
+                                <div><strong>Carregando modelo...</strong></div>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="prevRodovia">Rodovia Federal (BR)</label>
-                            <select id="prevRodovia" class="select-custom">
-                                <!-- Preenchido dinamicamente -->
-                            </select>
+                        <!-- 2º Card: Variáveis Exógenas -->
+                        <div class="predict-form-card">
+                            <div class="form-card-header">
+                                <div class="form-card-title">
+                                    <i data-lucide="sliders" class="card-title-icon"></i>
+                                    <span>Variáveis Exógenas</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prevCenarioChuva">Condições Climáticas (Precipitação)</label>
+                                <select id="prevCenarioChuva" class="select-custom">
+                                    <option value="seco">Tempo Seco / Céu Claro (0 mm)</option>
+                                    <option value="leve">Chuva Leve (5 mm/dia)</option>
+                                    <option value="moderada" selected>Chuva Moderada / Pista Molhada (15 mm/dia)</option>
+                                    <option value="tempestade">Tempestade Severa (40 mm/dia)</option>
+                                    <option value="fim_de_semana">Chuva Concentrada no Fim de Semana (30 mm)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prevCenarioFeriado">Calendário Operacional (Feriado)</label>
+                                <select id="prevCenarioFeriado" class="select-custom">
+                                    <option value="nenhum">Semana Típica (Sem Feriados)</option>
+                                    <option value="prolongado" selected>Feriado Prolongado (Sexta-feira)</option>
+                                    <option value="meio_semana">Feriado no Meio da Semana (Quarta-feira)</option>
+                                </select>
+                            </div>
+
+                            <button id="btnExecutarPrevisao" class="btn-run-predict">
+                                <i data-lucide="play"></i> Processar Previsão
+                            </button>
                         </div>
 
-                        <div class="form-group">
-                            <label for="prevTrecho">Segmento Isométrico (20 km)</label>
-                            <select id="prevTrecho" class="select-custom">
-                                <!-- Preenchido dinamicamente -->
-                            </select>
-                        </div>
-
-                        <!-- Card com Metadados Reais do Trecho Selecionado -->
-                        <div id="prevTrechoSummary" class="selected-trecho-summary">
-                            <div><strong>Carregando modelo...</strong></div>
-                        </div>
-
-                        <div class="form-section-title">2. Condições Climáticas (Exógena 1)</div>
-                        <div class="form-group">
-                            <label for="prevCenarioChuva">Cenário Rápido de Precipitação</label>
-                            <select id="prevCenarioChuva" class="select-custom">
-                                <option value="seco">Tempo Seco / Céu Claro (0 mm)</option>
-                                <option value="leve">Chuva Leve (5 mm/dia)</option>
-                                <option value="moderada" selected>Chuva Moderada / Pista Molhada (15 mm/dia)</option>
-                                <option value="tempestade">Tempestade Severa (40 mm/dia)</option>
-                                <option value="fim_de_semana">Chuva Concentrada no Fim de Semana (30 mm)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-section-title">3. Calendário Operacional (Exógena 2)</div>
-                        <div class="form-group">
-                            <label for="prevCenarioFeriado">Cenário de Feriado</label>
-                            <select id="prevCenarioFeriado" class="select-custom">
-                                <option value="nenhum">Semana Típica (Sem Feriados)</option>
-                                <option value="prolongado" selected>Feriado Prolongado (Sexta-feira)</option>
-                                <option value="meio_semana">Feriado no Meio da Semana (Quarta-feira)</option>
-                            </select>
-                        </div>
-
-                        <button id="btnExecutarPrevisao" class="btn-run-predict">
-                            <i data-lucide="play"></i> Processar SARIMAX
-                        </button>
                     </div>
 
                     <!-- Coluna de Resultados e Gráficos -->

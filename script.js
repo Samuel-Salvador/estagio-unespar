@@ -1155,18 +1155,87 @@ function exibirResumoTrechoSelecionado() {
     const summaryEl = document.getElementById('prevTrechoSummary');
     if (!t || !summaryEl) return;
 
+    const ruidoAprovado = t.ruido_branco;
+    const chuvaSig = t.chuva_sig;
+    const feriadoSig = t.feriado_sig;
+
     summaryEl.innerHTML = `
-        <div style="font-size:0.95rem; font-weight:700; color:var(--text-heading); margin-bottom:0.35rem;">
-            ${t.br}/${t.uf} — km ${t.km_inicio} a ${t.km_fim}
+        <div class="model-summary-header">
+            <div class="model-summary-title">
+                <i data-lucide="cpu" class="model-summary-icon"></i>
+                <span>Modelo Calibrado</span>
+            </div>
+            <span class="model-badge-order">SARIMAX ${t.order}×${t.seasonal}</span>
         </div>
-        <div><strong>Histórico (5 anos):</strong> ${t.acidentes.toLocaleString('pt-BR')} sinistros (${(t.acidentes/5).toFixed(1)}/ano)</div>
-        <div><strong>Esparsidade:</strong> ${t.esparsidade}% dias nulos | <strong>Ruído Branco:</strong> ${t.ruido_branco ? 'Sim (Aprovado)' : 'Não'}</div>
-        <div><strong>SARIMAX:</strong> ${t.order}×${t.seasonal}</div>
-        <div><strong>&beta; Chuva:</strong> ${t.beta_chuva} (${t.chuva_sig ? '<span style="color:var(--accent-rain); font-weight:600;">Significativo</span>' : 'Inexpressivo'})</div>
-        <div><strong>&beta; Feriados:</strong> ${t.beta_feriado} (${t.feriado_sig ? '<span style="color:var(--accent-holiday); font-weight:600;">Significativo</span>' : 'Inexpressivo'})</div>
+
+        <div class="model-summary-meta">
+            <span class="model-loc-tag">${t.br}/${t.uf}</span>
+            <span class="model-km-tag">km ${t.km_inicio} a ${t.km_fim}</span>
+            <span class="model-reg-tag">${t.regiao || ''}</span>
+        </div>
+
+        <div class="model-summary-grid">
+            <div class="model-stat-item">
+                <span class="model-stat-label">Sinistros (5 anos)</span>
+                <span class="model-stat-val">${t.acidentes.toLocaleString('pt-BR')} <small>(${(t.acidentes / 5).toFixed(1)}/ano)</small></span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">Esparsidade</span>
+                <span class="model-stat-val">${t.esparsidade}% <small>zeros</small></span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">Erro MAE</span>
+                <span class="model-stat-val font-mono">${t.mae}</span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">Erro RMSE</span>
+                <span class="model-stat-val font-mono">${t.rmse}</span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">Ruído Branco</span>
+                <span class="model-stat-val">
+                    <span class="model-sub-badge ${ruidoAprovado ? 'badge-ok' : 'badge-warn'}">
+                        ${ruidoAprovado ? 'Aprovado ✓' : 'Não Aprovado'}
+                    </span>
+                </span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">Ljung-Box (p)</span>
+                <span class="model-stat-val font-mono">${formatarPValor(t.ljung_box_p, 4)}</span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">&beta; Chuva</span>
+                <span class="model-stat-val font-mono">
+                    ${t.beta_chuva}
+                    <span class="model-sub-badge ${chuvaSig ? 'badge-sig-rain' : 'badge-muted'}">
+                        ${chuvaSig ? 'Sig. ✓' : 'Inexpr.'}
+                    </span>
+                </span>
+            </div>
+
+            <div class="model-stat-item">
+                <span class="model-stat-label">&beta; Feriados</span>
+                <span class="model-stat-val font-mono">
+                    ${t.beta_feriado}
+                    <span class="model-sub-badge ${feriadoSig ? 'badge-sig-holiday' : 'badge-muted'}">
+                        ${feriadoSig ? 'Sig. ✓' : 'Inexpr.'}
+                    </span>
+                </span>
+            </div>
+        </div>
     `;
 
     document.getElementById('badgeModeloOrdem').innerText = `${t.order}×${t.seasonal}`;
+
+    if (window.lucide && typeof lucide.createIcons === 'function') {
+        lucide.createIcons({ root: summaryEl });
+    }
 }
 
 function inicializarGraficoPrevisao() {

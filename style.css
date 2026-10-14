@@ -1099,23 +1099,54 @@ main {
 
 .predict-layout {
     display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 2rem;
+    grid-template-columns: 390px 1fr;
+    gap: 1.75rem;
     align-items: start;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .predict-layout {
         grid-template-columns: 1fr;
     }
+}
+
+.predict-inputs-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .predict-form-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.35rem;
     box-shadow: var(--shadow-sm);
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.form-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.form-card-title i,
+.form-card-title .card-title-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary);
 }
 
 .form-section-title {
@@ -1157,18 +1188,154 @@ main {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+/* Informações do Modelo Construído para o Trecho */
 .selected-trecho-summary {
-    background-color: #f8fafc;
+    background: #f8fafc;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.85rem 1rem;
-    margin-bottom: 1.25rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 0.5rem;
 }
 
-.selected-trecho-summary strong {
+.model-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.model-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--text-heading);
+}
+
+.model-summary-title i,
+.model-summary-title .model-summary-icon {
+    width: 15px;
+    height: 15px;
+    color: var(--primary);
+}
+
+.model-badge-order {
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: monospace;
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #c7d2fe;
+}
+
+.model-summary-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.8rem;
+}
+
+.model-loc-tag {
+    font-weight: 700;
+    color: var(--text-heading);
+}
+
+.model-km-tag {
+    color: var(--text-muted);
+}
+
+.model-reg-tag {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.45rem;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 4px;
+    margin-left: auto;
+}
+
+.model-summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.model-stat-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.45rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.model-stat-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.model-stat-val {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-heading);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+.model-stat-val small {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.model-stat-val.font-mono {
+    font-family: monospace;
+}
+
+.model-sub-badge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.model-sub-badge.badge-ok {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.model-sub-badge.badge-warn {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.model-sub-badge.badge-sig-rain {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.model-sub-badge.badge-sig-holiday {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
+.model-sub-badge.badge-muted {
+    background: #f1f5f9;
+    color: #64748b;
 }
 
 .btn-run-predict {
