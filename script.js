@@ -9,6 +9,8 @@ const appState = {
     dados: null,
     secaoAtiva: 'sobre',
     mapa: null,
+    camadaMascara: null,
+    camadaContorno: null,
     camadaVetorial: null,
     camadaAtiva: 'todos', // 'todos' | 'chuva' | 'feriado' | 'top50'
     ufSelecionada: 'TODAS',
@@ -157,31 +159,9 @@ function inicializarMapa() {
     // Adiciona OpenStreetMap como camada padrão ativa
     osmLayer.addTo(appState.mapa);
 
-    // Máscara opaca sobre os países vizinhos (destacando 100% apenas o território brasileiro)
-    if (window.BRASIL_MASCARA) {
-        L.geoJSON(window.BRASIL_MASCARA, {
-            style: {
-                fillColor: '#f8fafc',
-                fillOpacity: 0.94,
-                color: '#cbd5e1',
-                weight: 1.5
-            },
-            interactive: false
-        }).addTo(appState.mapa);
-    }
-
-    // Contorno oficial das fronteiras do Brasil (IBGE)
-    if (window.BRASIL_CONTORNO) {
-        L.geoJSON(window.BRASIL_CONTORNO, {
-            style: {
-                fillOpacity: 0,
-                color: '#334155',
-                weight: 1.8,
-                dashArray: '4, 4'
-            },
-            interactive: false
-        }).addTo(appState.mapa);
-    }
+    // Camadas dinâmicas para máscara territorial e contorno oficial IBGE
+    appState.camadaMascara = L.layerGroup().addTo(appState.mapa);
+    appState.camadaContorno = L.layerGroup().addTo(appState.mapa);
 
     // Controle para alternar entre OpenStreetMap e Mapa Cinza Sóbrio
     L.control.layers({
@@ -207,11 +187,13 @@ function inicializarMapa() {
     const selectUf = document.getElementById('filtroUfMapa');
     selectUf.addEventListener('change', (e) => {
         appState.ufSelecionada = e.target.value;
+        atualizarMascaraEContorno();
         atualizarCamadaMapa();
         ajustarZoomMapaPorUf(appState.ufSelecionada);
         atualizarGraficosObservatorio();
     });
 
+    atualizarMascaraEContorno();
     atualizarCamadaMapa();
     atualizarLegendaMapa(appState.camadaAtiva);
 }
@@ -389,13 +371,66 @@ const UFS_BOUNDS = {
     'AP': [[-1.2, -54.9], [4.4, -49.9]]
 };
 
+function atualizarMascaraEContorno() {
+    if (!appState.mapa || !appState.camadaMascara || !appState.camadaContorno) return;
+    
+    appState.camadaMascara.clearLayers();
+    appState.camadaContorno.clearLayers();
+    
+    const uf = appState.ufSelecionada;
+    
+    let mascaraGeoJson = null;
+    let contornoGeoJson = null;
+    
+    if (uf === 'TODAS') {
+        mascaraGeoJson = window.BRASIL_MASCARA;
+        contornoGeoJson = window.BRASIL_CONTORNO;
+    } else {
+        if (window.UFS_MASCARA && window.UFS_MASCARA[uf]) {
+            mascaraGeoJson = window.UFS_MASCARA[uf];
+        }
+        if (window.UFS_CONTORNO && window.UFS_CONTORNO[uf]) {
+            contornoGeoJson = window.UFS_CONTORNO[uf];
+        }
+    }
+    
+    if (mascaraGeoJson) {
+        L.geoJSON(mascaraGeoJson, {
+            style: {
+                fillColor: '#f8fafc',
+                fillOpacity: 0.94,
+                color: '#cbd5e1',
+                weight: 1.5
+            },
+            interactive: false
+        }).addTo(appState.camadaMascara);
+    }
+    
+    if (contornoGeoJson) {
+        L.geoJSON(contornoGeoJson, {
+            style: {
+                fillOpacity: 0,
+                color: '#334155',
+                weight: 2.2,
+                dashArray: '4, 4'
+            },
+            interactive: false
+        }).addTo(appState.camadaContorno);
+    }
+}
+
 function ajustarZoomMapaPorUf(uf) {
     if (!appState.mapa) return;
 
-    if (uf === 'TODAS' || !UFS_BOUNDS[uf]) {
+    if (uf === 'TODAS') {
         const BRAZIL_BOUNDS = L.latLngBounds([[-34.5, -74.5], [5.5, -34.0]]);
         appState.mapa.fitBounds(BRAZIL_BOUNDS, { padding: [10, 10] });
-    } else {
+    } else if (window.UFS_CONTORNO && window.UFS_CONTORNO[uf]) {
+        // Enquadra perfeitamente pelos limites oficiais do contorno IBGE
+        const tempLayer = L.geoJSON(window.UFS_CONTORNO[uf]);
+        const bounds = tempLayer.getBounds();
+        appState.mapa.fitBounds(bounds, { padding: [30, 30] });
+    } else if (UFS_BOUNDS[uf]) {
         const bounds = UFS_BOUNDS[uf];
         appState.mapa.fitBounds(bounds, { padding: [20, 20], maxZoom: 8 });
     }
